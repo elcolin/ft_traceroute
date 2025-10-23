@@ -3,6 +3,8 @@
         "ft_traceroute.h": "c",
         "unistd.h": "c",
         "args.h": "c",
-        "byteswap.h": "c"
+        "byteswap.h": "c",
+        "packet.h": "c",
+        "ip_icmp.h": "c"
     }
 }
