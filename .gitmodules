@@ -1,0 +1,3 @@
+[submodule "ft_ping"]
+	path = ft_ping
+	url = git@github.com:elcolin/ft_ping.git
