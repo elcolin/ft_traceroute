@@ -90,7 +90,7 @@ status getValidPacket(u_int8_t *buffer, t_packet *reply, int size)
     int pkg_idx = 0;
     while (pkg_idx < (int) size && pkg_idx > -1)
     {
-        printf("size %d\t", size);
+        // printf("size %d\t", size);
         // Loop until we find a valid packet
         pkg_idx = parsePacket((buffer + pkg_idx), &reply->ip_hdr, &reply->icmp_hdr);
         if (reply->icmp_hdr && reply->icmp_hdr->type)
