@@ -63,18 +63,18 @@ void defineRequestPacket(t_packet *request,
     defineRequestIPHeader(request->ip_hdr, src_ip, dst_ip, sequenceNumber);    
 }
 
-status comparePackets(struct icmphdr *icmp_reply, struct icmphdr *icmp_request)
-{
-    if (icmp_reply == NULL || icmp_request == NULL)
-        return FAILURE;
-    if (ntohs(icmp_reply->un.echo.id) != ntohs(icmp_request->un.echo.id))
-    // Not the same process
-        return FAILURE;
-    if (ntohs(icmp_reply->un.echo.sequence) != ntohs(icmp_request->un.echo.sequence))
-    // Not the same sequence id as request
-        return FAILURE;
-    return SUCCESS;
-}
+// status comparePackets(struct icmphdr *icmp_reply, struct icmphdr *icmp_request)
+// {
+//     if (icmp_reply == NULL || icmp_request == NULL)
+//         return FAILURE;
+//     if (ntohs(icmp_reply->un.echo.id) != ntohs(icmp_request->un.echo.id))
+//     // Not the same process
+//         return FAILURE;
+//     if (ntohs(icmp_reply->un.echo.sequence) != ntohs(icmp_request->un.echo.sequence))
+//     // Not the same sequence id as request
+//         return FAILURE;
+//     return SUCCESS;
+// }
 
 int parsePacket(void *buffer, struct iphdr **ip_header, struct icmphdr **icmp_header)
 {
@@ -85,21 +85,19 @@ int parsePacket(void *buffer, struct iphdr **ip_header, struct icmphdr **icmp_he
     return ntohs((*ip_header)->tot_len);
 }
 
-status getValidPacket(void *buffer, t_packet **reply, t_packet *request, size_t size)
+status getValidPacket(u_int8_t *buffer, t_packet *reply, int size)
 {
     int pkg_idx = 0;
-    (*reply) = buffer;
     while (pkg_idx < (int) size && pkg_idx > -1)
     {
+        printf("size %d\t", size);
         // Loop until we find a valid packet
-        pkg_idx = parsePacket((buffer + pkg_idx), &(*reply)->ip_hdr, &(*reply)->icmp_hdr);
-        if ((*reply)->icmp_hdr && (*reply)->icmp_hdr->type)
+        pkg_idx = parsePacket((buffer + pkg_idx), &reply->ip_hdr, &reply->icmp_hdr);
+        if (reply->icmp_hdr && reply->icmp_hdr->type)
         {
-            struct icmphdr *errorPacket = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT((*reply)->icmp_hdr));
-            if (errorPacket->un.echo.id == request->icmp_hdr->un.echo.id)
-                return SUCCESS;
+            //struct icmphdr *errorPacket = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT(reply->icmp_hdr));
+            return SUCCESS;
         }
     }
-    reply = NULL;
     return FAILURE;
 }

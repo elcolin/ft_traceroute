@@ -46,8 +46,12 @@ void printPacket(t_packet *reply)
     addr.s_addr = saddr;
 
     char *ip_str = inet_ntoa(addr);
-    printf("%s ", ip_str);
+    if (!saddr)
+        printf("* ");
+    else
+        printf("%s\t", ip_str);
 }
+
 
 int main(int argc, char *argv[])
 {
@@ -58,7 +62,9 @@ int main(int argc, char *argv[])
     // long                rtt_microseconds = 0;
     // t_packet            probe = {};
     t_packet            requestPackets[PACKET_NUMBER] = {0};
-    t_packet            *replyPackets[PACKET_NUMBER] = {0};
+    t_packet            replyPackets[PACKET_NUMBER] = {0};
+    t_packet            errorPacket;
+    struct icmphdr       *errorPacketPtr = NULL;
     struct sockaddr_in  addrs[2] = {0};
     uint8_t             requestBuffer[1024] = {};
     uint8_t             replyBuffer[1024] = {};
@@ -79,33 +85,48 @@ int main(int argc, char *argv[])
         for (int i = 0; i < PACKET_NUMBER; i++)
         {
             initPacket((requestBuffer + shift), &requestPackets[i]);
-            requestPackets[i].icmp_hdr->un.echo.id = htons(getpid() & 0xFFFF);
+            requestPackets[i].icmp_hdr->un.echo.id = htons((getpid() + i) & 0xFFFF);
             defineRequestPacket(&requestPackets[i], addrs[SOURCE].sin_addr.s_addr, addrs[DESTINATION].sin_addr.s_addr, sequenceNumber);
             triggerErrorIf(sendRequest(sockfd, &addrs[DESTINATION], &requestPackets[i]) < 0, "sendto failed", sockfd);
             shift = ntohs(requestPackets[i].ip_hdr->tot_len);
         }
-        // int retrievedPackets = 0;
         timeout.tv_sec = 1;// TO DO change
-        shift = 0;
         while (1)
         {
             if (socketIsReady(sockfd, &readfds, &timeout) == FAILURE)
                 break;
             int size = receiveResponse((void *)replyBuffer, sockfd, sizeof(replyBuffer));
             triggerErrorIf(size < 0, "recvfrom failed", sockfd);
-            for (int i = 0; i < PACKET_NUMBER; i++)
+            shift = 0;
+            while (1)
             {
-                if (getValidPacket((replyBuffer + shift), &replyPackets[i], &requestPackets[i], size) == SUCCESS)
-                    shift = ntohs(replyPackets[i]->ip_hdr->tot_len);
+                if (getValidPacket((replyBuffer + shift), &errorPacket, size - shift) == SUCCESS)
+                {
+                    errorPacketPtr = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT((errorPacket.icmp_hdr)));
+                    for (int i = 0; i < PACKET_NUMBER; i++)
+                    {
+                        printf("%d : %d\t", ntohs(errorPacketPtr->un.echo.id), ntohs(requestPackets[i].icmp_hdr->un.echo.id));
+                        if (errorPacketPtr->un.echo.id == requestPackets[i].icmp_hdr->un.echo.id)
+                        {
+                            printf(" y\n");
+                            memcpy(&replyPackets[i], &errorPacket, sizeof(errorPacket));
+                            shift += errorPacket.ip_hdr->tot_len;
+                            break;
+                        }
+                        shift += errorPacket.ip_hdr->tot_len;
+                    }
+                }
+                else
+                    break;
             }
         }
         printf("%d ", sequenceNumber);
         for (int i = 0; i < PACKET_NUMBER; i++)
         {
-            printPacket(replyPackets[i]);
+            printPacket(&replyPackets[i]);
         }
         printf("\n");
         sequenceNumber++;
-        usleep(500);
+        usleep(50);
     }
 }
