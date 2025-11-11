@@ -82,59 +82,44 @@ int main(int argc, char *argv[])
 
     sockfd = initSocketFd();
     FD_ZERO(&readfds);
-    while (hops <= MAX_HOPS)
+    while (hops < MAX_HOPS)
     {
         memset(&timeout, 0, sizeof(timeout));
         memset(&replyBuffer, 0, sizeof(replyBuffer));
         memset(&requestBuffer, 0, sizeof(requestBuffer));
-        uint16_t shift = 0;
+        uint16_t reqShift = 0;
         hops++;
+        memset(replyPackets, 0, sizeof(replyPackets));
         for (int i = 0; i < PACKET_NUMBER; i++)
         {
-            initPacket((requestBuffer + shift), &requestPackets[i]);
-            //defineRequestPacket(&requestPackets[i], addrs[SOURCE].sin_addr.s_addr, addrs[DESTINATION].sin_addr.s_addr, sequenceNumber, hops);
+            initPacket((requestBuffer + reqShift), &requestPackets[i]);
             defineRequestIPHeader(requestPackets[i].ip_hdr,
                            addrs[SOURCE].sin_addr.s_addr,
                            addrs[DESTINATION].sin_addr.s_addr,
                            hops,
                            (getpid() + i) & 0xFFFF);
             defineRequestICMPHeader(requestPackets[i].icmp_hdr, getpid() & 0xFFFF, sequenceNumber++);
-            // printf("mount2 %d \n", ntohs(requestPackets[i].icmp_hdr->un.echo.id));
-            
             triggerErrorIf(sendRequest(sockfd, &addrs[DESTINATION], &requestPackets[i]) < 0, "sendto failed", sockfd);
-            //usleep(50);
-
-            shift += ntohs(requestPackets[i].ip_hdr->tot_len);
-
-        }
-        memset(replyPackets, 0, sizeof(replyPackets));
-
-        while (1)
-        {
-            timeout.tv_usec = 50000 + sequenceNumber * 10000;
+            reqShift += ntohs(requestPackets[i].ip_hdr->tot_len);
+            uint16_t repShift = 0;
+            timeout.tv_usec = 30000 + sequenceNumber * 10000;
             timeout.tv_sec = 0;// TO DO change
             if (socketIsReady(sockfd, &readfds, &timeout) == FAILURE)
                 break;
             int size = receiveResponse((void *)replyBuffer, sockfd, sizeof(replyBuffer));
             triggerErrorIf(size < 0, "recvfrom failed", sockfd);
-            shift = 0;
-            // printf("s %d\n", size);
-            while (getValidPacket((replyBuffer + shift), &errorPacket, size - shift) == SUCCESS)
+            while (getValidPacket((replyBuffer + repShift), &errorPacket, size - repShift) == SUCCESS)
             {
                 errorPacketPtr = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT((errorPacket.icmp_hdr)));
-                for (int i = 0; i < PACKET_NUMBER; i++)
+                if (!replyPackets[i] && errorPacketPtr->un.echo.sequence == requestPackets[i].icmp_hdr->un.echo.sequence)
                 {
-                    if (replyPackets[i])
-                        continue;
-                    // printf("%d rec %d : req %d\n", i, ntohs(errorPacketPtr->un.echo.id), ntohs(requestPackets[i].icmp_hdr->un.echo.id));
-                    if (errorPacketPtr->un.echo.sequence == requestPackets[i].icmp_hdr->un.echo.sequence)
-                    {
-                        replyPackets[i] = &errorPacket;
-                        break;
-                    }
+                    replyPackets[i] = &errorPacket;
+                    break;
                 }
-                shift += errorPacket.ip_hdr->tot_len;
+                repShift += errorPacket.ip_hdr->tot_len;
             }
+            usleep(50);
+
         }
         printf("%ld ", hops);
         for (int i = 0; i < PACKET_NUMBER; i++)
