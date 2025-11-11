@@ -21,14 +21,18 @@ int printPacketError(t_packet *reply, const int sequenceNumber)
     switch (reply->icmp_hdr->type)
     {
         case ICMP_DEST_UNREACH:
+        {
             char *msg_unreach[] = {"Destination net unreachable", "Destination host unreachable", "Destination protocol unreachable", "Destination port unreachable", "Fragmentation needed and DF set", "Source route failed"};
             printf("From %s icmp_seq=%d %s\n", ip_str, sequenceNumber, msg_unreach[reply->icmp_hdr->code]);
-            return TRUE;
+        }
+        return TRUE;
         break;
         case ICMP_TIME_EXCEEDED:
+        {
             char *msg_ttl[] = {"Time to live exceeded", "Fragment Reass time exceeded"};
             printf("From %s icmp_seq=%d %s\n", ip_str, sequenceNumber, msg_ttl[reply->icmp_hdr->code]);
-            return TRUE;
+        }
+        return TRUE;
         break;
         default:
             return FALSE;
