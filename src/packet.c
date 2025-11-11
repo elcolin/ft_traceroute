@@ -27,15 +27,16 @@ uint16_t computeChecksum(uint8_t *addr, int count)
 void defineRequestIPHeader(struct iphdr *ipHeader,
                            uint32_t src_ip,
                            uint32_t dst_ip,
-                           uint8_t sequenceNumber)
+                           uint8_t ttl,
+                           uint16_t id)
 {
     ipHeader->ihl = 5;                 // 5 * 4 = 20 bytes (no options)
     ipHeader->version = 4;
     ipHeader->tos = 0;
     ipHeader->tot_len = htons(sizeof(struct iphdr) + sizeof(struct icmphdr) + DEFAULT_PADDING);
-    ipHeader->id = htons(sequenceNumber);
+    ipHeader->id = htons(id);
     ipHeader->frag_off = 0;
-    ipHeader->ttl = sequenceNumber;
+    ipHeader->ttl = ttl;
     ipHeader->protocol = IPPROTO_ICMP;
     ipHeader->saddr = src_ip;
     ipHeader->daddr = dst_ip;
@@ -43,25 +44,26 @@ void defineRequestIPHeader(struct iphdr *ipHeader,
     ipHeader->check = computeChecksum((uint8_t *)ipHeader, sizeof(*ipHeader));
 }
 
-void defineRequestICMPHeader(struct icmphdr *icmpHeader, u_int16_t sequenceNumber)
+void defineRequestICMPHeader(struct icmphdr *icmpHeader, uint16_t id, u_int16_t sequenceNumber)
 {
     // Setting up the ICMP header
     icmpHeader->type = ICMP_ECHO;
     icmpHeader->code = ICMP_CODE;
-    // icmpHeader->un.echo.id = htons(getpid() & 0xFFFF);
+    icmpHeader->un.echo.id = htons(id);
     icmpHeader->un.echo.sequence = htons(sequenceNumber);
     icmpHeader->checksum = 0;
     icmpHeader->checksum = computeChecksum((uint8_t *)icmpHeader, sizeof(*icmpHeader));
 }
 
-void defineRequestPacket(t_packet *request,
-                        uint32_t src_ip,
-                        uint32_t dst_ip,
-                        uint8_t sequenceNumber)
-{
-    defineRequestICMPHeader(request->icmp_hdr, sequenceNumber);
-    defineRequestIPHeader(request->ip_hdr, src_ip, dst_ip, sequenceNumber);    
-}
+// void defineRequestPacket(t_packet *request,
+//                         uint32_t src_ip,
+//                         uint32_t dst_ip,
+//                         uint8_t sequenceNumber,
+//                         uint8_t ttl)
+// {
+//     //defineRequestICMPHeader(request->icmp_hdr, sequenceNumber);
+//     //defineRequestIPHeader(request->ip_hdr, src_ip, dst_ip, sequenceNumber, ttl);    
+// }
 
 // status comparePackets(struct icmphdr *icmp_reply, struct icmphdr *icmp_request)
 // {

@@ -68,6 +68,7 @@ int main(int argc, char *argv[])
     struct sockaddr_in  addrs[2] = {0};
     uint8_t             requestBuffer[1024] = {};
     uint8_t             replyBuffer[1024] = {};
+    size_t              hops = 0;
 
     if (argc < 2)
         return 1;//TO DO add more detailed error
@@ -77,21 +78,27 @@ int main(int argc, char *argv[])
 
     sockfd = initSocketFd();
     FD_ZERO(&readfds);
-    while (sequenceNumber <= MAX_HOPS)
+    while (hops <= MAX_HOPS)
     {
         memset(&timeout, 0, sizeof(timeout));
         memset(&replyBuffer, 0, sizeof(replyBuffer));
         memset(&requestBuffer, 0, sizeof(requestBuffer));
         uint16_t shift = 0;
+        hops++;
         for (int i = 0; i < PACKET_NUMBER; i++)
         {
             initPacket((requestBuffer + shift), &requestPackets[i]);
-            requestPackets[i].icmp_hdr->un.echo.id = htons((getpid() - i * 10) & 0xFFFF);
-            defineRequestPacket(&requestPackets[i], addrs[SOURCE].sin_addr.s_addr, addrs[DESTINATION].sin_addr.s_addr, sequenceNumber);
+            //defineRequestPacket(&requestPackets[i], addrs[SOURCE].sin_addr.s_addr, addrs[DESTINATION].sin_addr.s_addr, sequenceNumber, hops);
+            defineRequestIPHeader(requestPackets[i].ip_hdr,
+                           addrs[SOURCE].sin_addr.s_addr,
+                           addrs[DESTINATION].sin_addr.s_addr,
+                           hops,
+                           (getpid() + i) & 0xFFFF);
+            defineRequestICMPHeader(requestPackets[i].icmp_hdr, getpid() & 0xFFFF, sequenceNumber++);
             // printf("mount2 %d \n", ntohs(requestPackets[i].icmp_hdr->un.echo.id));
             
             triggerErrorIf(sendRequest(sockfd, &addrs[DESTINATION], &requestPackets[i]) < 0, "sendto failed", sockfd);
-            usleep(50);
+            //usleep(50);
 
             shift += ntohs(requestPackets[i].ip_hdr->tot_len);
 
@@ -116,7 +123,7 @@ int main(int argc, char *argv[])
                     if (replyPackets[i])
                         continue;
                     // printf("%d rec %d : req %d\n", i, ntohs(errorPacketPtr->un.echo.id), ntohs(requestPackets[i].icmp_hdr->un.echo.id));
-                    if (errorPacketPtr->un.echo.id == requestPackets[i].icmp_hdr->un.echo.id)
+                    if (errorPacketPtr->un.echo.sequence == requestPackets[i].icmp_hdr->un.echo.sequence)
                     {
                         replyPackets[i] = &errorPacket;
                         break;
@@ -125,13 +132,12 @@ int main(int argc, char *argv[])
                 shift += errorPacket.ip_hdr->tot_len;
             }
         }
-        printf("%d ", sequenceNumber);
+        printf("%ld ", hops);
         for (int i = 0; i < PACKET_NUMBER; i++)
         {
             printPacket(replyPackets[i]);
         }
         printf("\n");
-        sequenceNumber++;
         usleep(50);
     }
 }
