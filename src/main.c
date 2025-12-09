@@ -65,9 +65,10 @@ int main(int argc, char *argv[])
     u_int16_t           sequenceNumber = 1;
     struct timeval      timeout;
     // long                rtt_microseconds = 0;
-    // t_packet            probe = {};
-    t_packet            requestPackets[PACKET_NUMBER] = {0};
-    t_packet            replyPackets[PACKET_NUMBER] = {0};
+
+    t_packet    requestPacket = {};
+    t_packet    replyPacket = {};
+
     struct sockaddr_in  addrs[2] = {0};
     uint8_t             requestBuffer[1024] = {};
     uint8_t             replyBuffer[1024] = {};
@@ -87,25 +88,24 @@ int main(int argc, char *argv[])
         memset(&replyBuffer, 0, sizeof(replyBuffer));
         memset(&requestBuffer, 0, sizeof(requestBuffer));
         hops++;
-        memset(replyPackets, 0, sizeof(replyPackets));
         printf("%ld ", hops);
         for (int i = 0; i < PACKET_NUMBER; i++)
         {
-            initPacket((requestBuffer), &requestPackets[i]);
-            defineRequestIPHeader(requestPackets[i].ip_hdr,
+            initPacket((requestBuffer), &requestPacket);
+            defineRequestIPHeader(requestPacket.ip_hdr,
                            addrs[SOURCE].sin_addr.s_addr,
                            addrs[DESTINATION].sin_addr.s_addr,
                            hops,
                            (getpid() + i) & 0xFFFF);
-            defineRequestICMPHeader(requestPackets[i].icmp_hdr, getpid() & 0xFFFF, sequenceNumber++);
-            triggerErrorIf(sendRequest(sockfd, &addrs[DESTINATION], &requestPackets[i]) < 0, "sendto failed", sockfd);
+            defineRequestICMPHeader(requestPacket.icmp_hdr, getpid() & 0xFFFF, sequenceNumber++);
+            triggerErrorIf(sendRequest(sockfd, &addrs[DESTINATION], &requestPacket) < 0, "sendto failed", sockfd);
             timeout.tv_usec = 30000 + sequenceNumber * 10000;
             timeout.tv_sec = 0;// TO DO change
             if (socketIsReady(sockfd, &readfds, &timeout) == FAILURE)
                 break;
             int size = receiveResponse((void *)replyBuffer, sockfd, sizeof(replyBuffer));
             triggerErrorIf(size < 0, "recvfrom failed", sockfd);
-            printReceivedPacket(replyBuffer, &replyPackets[i], requestPackets[i].icmp_hdr->un.echo.sequence);
+            printReceivedPacket(replyBuffer, &replyPacket, requestPacket.icmp_hdr->un.echo.sequence);
             usleep(50);
 
         }
