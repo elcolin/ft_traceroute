@@ -56,7 +56,7 @@ void printPacket(t_packet *reply)
     printf("%s\t", ip_str);
 }
 
-status printReceivedPacket(void *buffer, t_packet *replyPacket, uint16_t request_sequence_number);
+void printReceivedPacket(void *buffer, t_packet *replyPacket, uint16_t request_sequence_number);
 
 int main(int argc, char *argv[])
 {
@@ -114,19 +114,16 @@ int main(int argc, char *argv[])
     }
 }
 
-status printReceivedPacket(void *buffer, t_packet *replyPacket, uint16_t request_sequence_number)
+// TODO Move, split?
+void printReceivedPacket(void *buffer, t_packet *replyPacket, uint16_t request_sequence_number)
 {
     struct icmphdr       *errorPacketPtr = NULL;
     while (parsePacket((buffer), &replyPacket->ip_hdr, &replyPacket->icmp_hdr) == SUCCESS)
     {
         errorPacketPtr = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT((replyPacket->icmp_hdr)));
         if (errorPacketPtr->un.echo.sequence == request_sequence_number)
-        {
             printPacket(replyPacket);
-            return SUCCESS;
-        }
         buffer += ntohs(replyPacket->ip_hdr->tot_len);
     }
     printf("* ");
-    return FAILURE;
 }
