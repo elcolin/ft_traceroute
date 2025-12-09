@@ -56,6 +56,7 @@ void printPacket(t_packet *reply)
     printf("%s\t", ip_str);
 }
 
+status printReceivedPacket(void *buffer, t_packet *replyPacket, uint16_t request_sequence_number);
 
 int main(int argc, char *argv[])
 {
@@ -67,7 +68,6 @@ int main(int argc, char *argv[])
     // t_packet            probe = {};
     t_packet            requestPackets[PACKET_NUMBER] = {0};
     t_packet            replyPackets[PACKET_NUMBER] = {0};
-    struct icmphdr       *errorPacketPtr = NULL;
     struct sockaddr_in  addrs[2] = {0};
     uint8_t             requestBuffer[1024] = {};
     uint8_t             replyBuffer[1024] = {};
@@ -86,13 +86,12 @@ int main(int argc, char *argv[])
         memset(&timeout, 0, sizeof(timeout));
         memset(&replyBuffer, 0, sizeof(replyBuffer));
         memset(&requestBuffer, 0, sizeof(requestBuffer));
-        uint16_t reqShift = 0;
         hops++;
         memset(replyPackets, 0, sizeof(replyPackets));
         printf("%ld ", hops);
         for (int i = 0; i < PACKET_NUMBER; i++)
         {
-            initPacket((requestBuffer + reqShift), &requestPackets[i]);
+            initPacket((requestBuffer), &requestPackets[i]);
             defineRequestIPHeader(requestPackets[i].ip_hdr,
                            addrs[SOURCE].sin_addr.s_addr,
                            addrs[DESTINATION].sin_addr.s_addr,
@@ -100,30 +99,34 @@ int main(int argc, char *argv[])
                            (getpid() + i) & 0xFFFF);
             defineRequestICMPHeader(requestPackets[i].icmp_hdr, getpid() & 0xFFFF, sequenceNumber++);
             triggerErrorIf(sendRequest(sockfd, &addrs[DESTINATION], &requestPackets[i]) < 0, "sendto failed", sockfd);
-            reqShift += ntohs(requestPackets[i].ip_hdr->tot_len);
             timeout.tv_usec = 30000 + sequenceNumber * 10000;
             timeout.tv_sec = 0;// TO DO change
             if (socketIsReady(sockfd, &readfds, &timeout) == FAILURE)
                 break;
             int size = receiveResponse((void *)replyBuffer, sockfd, sizeof(replyBuffer));
             triggerErrorIf(size < 0, "recvfrom failed", sockfd);
-            void *bufferIdx = replyBuffer;
-            while (parsePacket((bufferIdx), &replyPackets[i].ip_hdr, &replyPackets[i].icmp_hdr) == SUCCESS)
-            {
-                errorPacketPtr = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT((replyPackets[i].icmp_hdr)));
-                if (errorPacketPtr->un.echo.sequence == requestPackets[i].icmp_hdr->un.echo.sequence)
-                {
-                    printPacket(&replyPackets[i]);
-                    break;
-                }
-                printf("* ");
-                bufferIdx += ntohs(replyPackets[i].ip_hdr->tot_len);
-                memset(&replyPackets[i], 0, sizeof(replyPackets[i]));
-            }
+            printReceivedPacket(replyBuffer, &replyPackets[i], requestPackets[i].icmp_hdr->un.echo.sequence);
             usleep(50);
 
         }
         printf("\n");
         usleep(50);
     }
+}
+
+status printReceivedPacket(void *buffer, t_packet *replyPacket, uint16_t request_sequence_number)
+{
+    struct icmphdr       *errorPacketPtr = NULL;
+    while (parsePacket((buffer), &replyPacket->ip_hdr, &replyPacket->icmp_hdr) == SUCCESS)
+    {
+        errorPacketPtr = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT((replyPacket->icmp_hdr)));
+        if (errorPacketPtr->un.echo.sequence == request_sequence_number)
+        {
+            printPacket(replyPacket);
+            return SUCCESS;
+        }
+        buffer += ntohs(replyPacket->ip_hdr->tot_len);
+    }
+    printf("* ");
+    return FAILURE;
 }
