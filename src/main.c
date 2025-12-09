@@ -66,8 +66,7 @@ int main(int argc, char *argv[])
     // long                rtt_microseconds = 0;
     // t_packet            probe = {};
     t_packet            requestPackets[PACKET_NUMBER] = {0};
-    t_packet            *replyPackets[PACKET_NUMBER] = {0};
-    t_packet            errorPacket;
+    t_packet            replyPackets[PACKET_NUMBER] = {0};
     struct icmphdr       *errorPacketPtr = NULL;
     struct sockaddr_in  addrs[2] = {0};
     uint8_t             requestBuffer[1024] = {};
@@ -90,6 +89,7 @@ int main(int argc, char *argv[])
         uint16_t reqShift = 0;
         hops++;
         memset(replyPackets, 0, sizeof(replyPackets));
+        printf("%ld ", hops);
         for (int i = 0; i < PACKET_NUMBER; i++)
         {
             initPacket((requestBuffer + reqShift), &requestPackets[i]);
@@ -108,23 +108,20 @@ int main(int argc, char *argv[])
             int size = receiveResponse((void *)replyBuffer, sockfd, sizeof(replyBuffer));
             triggerErrorIf(size < 0, "recvfrom failed", sockfd);
             void *bufferIdx = replyBuffer;
-            while (parsePacket((bufferIdx), &errorPacket.ip_hdr, &errorPacket.icmp_hdr) == SUCCESS)
+            while (parsePacket((bufferIdx), &replyPackets[i].ip_hdr, &replyPackets[i].icmp_hdr) == SUCCESS)
             {
-                errorPacketPtr = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT((errorPacket.icmp_hdr)));
-                if (!replyPackets[i] && errorPacketPtr->un.echo.sequence == requestPackets[i].icmp_hdr->un.echo.sequence)
+                errorPacketPtr = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT((replyPackets[i].icmp_hdr)));
+                if (errorPacketPtr->un.echo.sequence == requestPackets[i].icmp_hdr->un.echo.sequence)
                 {
-                    replyPackets[i] = &errorPacket;
+                    printPacket(&replyPackets[i]);
                     break;
                 }
-                bufferIdx += ntohs(errorPacket.ip_hdr->tot_len);
+                printf("* ");
+                bufferIdx += ntohs(replyPackets[i].ip_hdr->tot_len);
+                memset(&replyPackets[i], 0, sizeof(replyPackets[i]));
             }
             usleep(50);
 
-        }
-        printf("%ld ", hops);
-        for (int i = 0; i < PACKET_NUMBER; i++)
-        {
-            printPacket(replyPackets[i]);
         }
         printf("\n");
         usleep(50);
