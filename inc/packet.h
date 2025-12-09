@@ -45,8 +45,7 @@ void defineRequestIPHeader(struct iphdr *ipHeader,
                            uint8_t ttl,
                            uint16_t id);
 void defineRequestICMPHeader(struct icmphdr *icmpHeader, uint16_t id, u_int16_t sequenceNumber);
-// status      comparePackets(struct icmphdr *icmp_reply, struct icmphdr *icmp_request);
-int         parsePacket(void *buffer, struct iphdr **ip_header, struct icmphdr **icmp_header);
+status parsePacket(void *buffer, struct iphdr **ip_header, struct icmphdr **icmp_header);
 status      getValidPacket(u_int8_t *buffer, t_packet *reply, int size);
 
 #endif

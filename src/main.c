@@ -101,14 +101,14 @@ int main(int argc, char *argv[])
             defineRequestICMPHeader(requestPackets[i].icmp_hdr, getpid() & 0xFFFF, sequenceNumber++);
             triggerErrorIf(sendRequest(sockfd, &addrs[DESTINATION], &requestPackets[i]) < 0, "sendto failed", sockfd);
             reqShift += ntohs(requestPackets[i].ip_hdr->tot_len);
-            uint16_t repShift = 0;
             timeout.tv_usec = 30000 + sequenceNumber * 10000;
             timeout.tv_sec = 0;// TO DO change
             if (socketIsReady(sockfd, &readfds, &timeout) == FAILURE)
                 break;
             int size = receiveResponse((void *)replyBuffer, sockfd, sizeof(replyBuffer));
             triggerErrorIf(size < 0, "recvfrom failed", sockfd);
-            while (getValidPacket((replyBuffer + repShift), &errorPacket, size - repShift) == SUCCESS)
+            void *bufferIdx = replyBuffer;
+            while (parsePacket((bufferIdx), &errorPacket.ip_hdr, &errorPacket.icmp_hdr) == SUCCESS)
             {
                 errorPacketPtr = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT((errorPacket.icmp_hdr)));
                 if (!replyPackets[i] && errorPacketPtr->un.echo.sequence == requestPackets[i].icmp_hdr->un.echo.sequence)
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
                     replyPackets[i] = &errorPacket;
                     break;
                 }
-                repShift += errorPacket.ip_hdr->tot_len;
+                bufferIdx += ntohs(errorPacket.ip_hdr->tot_len);
             }
             usleep(50);
 
