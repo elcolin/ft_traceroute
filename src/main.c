@@ -122,7 +122,10 @@ void printReceivedPacket(void *buffer, t_packet *replyPacket, uint16_t request_s
     {
         errorPacketPtr = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT((replyPacket->icmp_hdr)));
         if (errorPacketPtr->un.echo.sequence == request_sequence_number)
+        {
             printPacket(replyPacket);
+            return;
+        }
         buffer += ntohs(replyPacket->ip_hdr->tot_len);
     }
     printf("* ");
