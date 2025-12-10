@@ -4,6 +4,7 @@
 #include <netinet/ip.h>
 // icmp header 
 #include <netinet/ip_icmp.h>
+#include <netinet/udp.h>
 #include <stddef.h>
 //memset
 #include <string.h>
@@ -27,8 +28,17 @@
 #define IPHDR_SHIFT(start) ((void *)start + IPHDR_SIZE)
 #define ICMPHDR_SHIFT(start) ((void *)start + ICMPHDR_SIZE)
 
+typedef struct s_pseudo_udp {
+    uint16_t sport;	/* source port */
+    uint16_t dport;	/* destination port */
+    uint8_t  zero;
+    uint8_t  protocol;		
+    uint16_t length; /* udp length */
+} t_pseudo_udp;
+
 typedef struct s_packet {
     struct iphdr    *ip_hdr;
+    struct udphdr   *udp_hdr;
     struct icmphdr  *icmp_hdr;
 }   t_packet;
 
@@ -40,6 +50,7 @@ void defineRequestIPHeader(struct iphdr *ipHeader,
                            uint8_t ttl,
                            uint16_t id);
 void defineRequestICMPHeader(struct icmphdr *icmpHeader, uint16_t id, u_int16_t sequenceNumber);
+void defineRequestUDPHeader(struct udphdr *udpHeader);
 status parsePacket(void *buffer, struct iphdr **ip_header, struct icmphdr **icmp_header);
 
 #endif

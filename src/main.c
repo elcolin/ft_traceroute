@@ -97,7 +97,8 @@ int main(int argc, char *argv[])
                            addrs[DESTINATION].sin_addr.s_addr,
                            hops,
                            (getpid() + i) & 0xFFFF);
-            defineRequestICMPHeader(requestPacket.icmp_hdr, getpid() & 0xFFFF, sequenceNumber++);
+            //defineRequestICMPHeader(requestPacket.icmp_hdr, getpid() & 0xFFFF, sequenceNumber++);
+            defineRequestUDPHeader(requestPacket.udp_hdr);
             triggerErrorIf(sendRequest(sockfd, &addrs[DESTINATION], &requestPacket) < 0, "sendto failed", sockfd);
             timeout.tv_usec = 30000 + sequenceNumber * 10000;
             timeout.tv_sec = 0;// TO DO change
@@ -105,7 +106,7 @@ int main(int argc, char *argv[])
                 break;
             int size = receiveResponse((void *)replyBuffer, sockfd, sizeof(replyBuffer));
             triggerErrorIf(size < 0, "recvfrom failed", sockfd);
-            printReceivedPacket(replyBuffer, &replyPacket, requestPacket.icmp_hdr->un.echo.sequence);
+            printReceivedPacket(replyBuffer, &replyPacket, 0);
             usleep(50);
 
         }
@@ -117,11 +118,13 @@ int main(int argc, char *argv[])
 // TODO Move, split?
 void printReceivedPacket(void *buffer, t_packet *replyPacket, uint16_t request_sequence_number)
 {
+    (void)  request_sequence_number;
     struct icmphdr       *errorPacketPtr = NULL;
     while (parsePacket((buffer), &replyPacket->ip_hdr, &replyPacket->icmp_hdr) == SUCCESS)
     {
         errorPacketPtr = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT((replyPacket->icmp_hdr)));
-        if (errorPacketPtr->un.echo.sequence == request_sequence_number)
+        (void) errorPacketPtr;
+        if (replyPacket->icmp_hdr->type == 11)
         {
             printPacket(replyPacket);
             return;
