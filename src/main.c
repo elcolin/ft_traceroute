@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
             timeout.tv_usec = 30000 + sequenceNumber * 10000;
             timeout.tv_sec = 0;// TO DO change
             if (socketIsReady(sockfd, &readfds, &timeout) == FAILURE)
-                break;
+                continue;
             int size = receiveResponse((void *)replyBuffer, sockfd, sizeof(replyBuffer));
             triggerErrorIf(size < 0, "recvfrom failed", sockfd);
             printReceivedPacket(replyBuffer, &replyPacket, 0);
