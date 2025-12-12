@@ -132,10 +132,9 @@ int main(int argc, char *argv[])
             errorPacketPtr = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT((replyPacket.icmp_hdr)));
             u_int16_t seq = ntohs(errorPacketPtr->un.echo.sequence);
             if (seq == 0)
-                break;
+                continue;
             memcpy(&replyPackets[seq - 1], &(*replyPacket.ip_hdr), sizeof(struct iphdr));
             pcknb++;
-            usleep(50);
         }
         hops ++;
     }
