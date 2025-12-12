@@ -98,8 +98,6 @@ int main(int argc, char *argv[])
     FD_ZERO(&readfds);
     while (hops < MAX_HOPS)
     {
-        memset(&timeout, 0, sizeof(timeout));
-        memset(&requestBuffer, 0, sizeof(requestBuffer));
         hops++;
         for (int i = 0; i < PACKET_NUMBER; i++)
         {
@@ -111,8 +109,6 @@ int main(int argc, char *argv[])
                 (getpid() + i) & 0xFFFF);
                 defineRequestICMPHeader(requestPacket.icmp_hdr, getpid() & 0xFFFF, sequenceNumber++);
                 triggerErrorIf(sendRequest(sockfd, &addrs[DESTINATION], &requestPacket) < 0, "sendto failed", sockfd);
-                timeout.tv_usec = 30000 + sequenceNumber * 10000;
-                timeout.tv_sec = 0;// TO DO change
             }
             usleep(50);
     }
