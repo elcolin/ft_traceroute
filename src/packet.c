@@ -60,8 +60,9 @@ void defineRequestICMPHeader(struct icmphdr *icmpHeader, uint16_t id, u_int16_t 
 void defineRequestUDPHeader(struct udphdr *udpHeader)
 {
     // toodo change
+
     static uint16_t dport = 33434;
-    udpHeader->uh_sport = htons(39694);
+    udpHeader->uh_sport = htons(rand() | 0x8000);
     udpHeader->uh_dport = htons(dport++);
     udpHeader->uh_ulen = htons(8);
     t_pseudo_udp psdudp = {};

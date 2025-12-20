@@ -87,6 +87,7 @@ int main(int argc, char *argv[])
     uint8_t             replyBuffer[1024] = {};
     size_t              hops = 0;
 
+    srand(time(NULL));
     if (argc < 2)
         return 1;//TO DO add more detailed error
     printf("%s %s\n", argv[0], argv[1]);

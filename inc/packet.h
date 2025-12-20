@@ -10,6 +10,8 @@
 #include <string.h>
 //getpid
 #include <unistd.h>
+//rand
+#include <stdlib.h>
 
 #include "utils.h"
 // #include "args.h"
