@@ -21,6 +21,7 @@
 #define ICMP_CODE 0
 #define BUFFER_SIZE 65535 //-> max buffer size 65 535
 #define DEFAULT_PADDING 56
+#define DEFAULT_DEST_PORT 33434
 
 #define IPHDR_SIZE (sizeof(struct iphdr))
 #define ICMPHDR_SIZE (sizeof(struct icmphdr))
