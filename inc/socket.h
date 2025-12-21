@@ -24,6 +24,6 @@ static inline int receiveResponse(void *buffer, int sockfd, u_int16_t buffer_siz
     socklen_t addr_len = sizeof(addr);
     return recvfrom(sockfd, buffer, buffer_size, 0, (struct sockaddr *)&addr, &addr_len);
 };
-status socketIsReady(int sockfd, fd_set *readfds, struct timeval *timeout);
-
+status socketIsReadyToRead(int sockfd, fd_set *readfds, struct timeval *timeout);
+status socketIsReadyToWrite(int sockfd, fd_set *writefds, struct timeval *timeout);
 #endif

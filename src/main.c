@@ -28,7 +28,7 @@ void printIPHeader(struct iphdr *reply)
 int main(int argc, char *argv[])
 {
     int                 sockfd;
-    fd_set              readfds;
+    fd_set              readfds, writefds;
     struct timeval      timeout;
     // long                rtt_microseconds = 0;
 
@@ -49,21 +49,25 @@ int main(int argc, char *argv[])
 
     sockfd = initSocketFd();
     FD_ZERO(&readfds);
+    FD_ZERO(&writefds);
     while (hops < MAX_HOPS)
     {
-        hops++;
         for (int i = 0; i < PACKET_NUMBER; i++)
         {
+            timeout.tv_usec = 30000;
+            timeout.tv_sec = 0;
             initPacket((requestBuffer), &requestPacket);
             defineRequestIPHeader(requestPacket.ip_hdr,
                 addrs[SOURCE].sin_addr.s_addr,
                 addrs[DESTINATION].sin_addr.s_addr,
-                hops,
-                (getpid() + i) & 0xFFFF);
+                hops + 1,
+                (getpid() + (hops * PACKET_NUMBER) + i) & 0xFFFF);
             defineRequestUDPHeader(requestPacket.udp_hdr);
+            while (socketIsReadyToWrite(sockfd, &writefds, &timeout))
+                usleep(50);
             triggerErrorIf(sendRequest(sockfd, &addrs[DESTINATION], &requestPacket) < 0, "sendto failed", sockfd);
         }
-        usleep(50);
+        hops++;
     }
     hops = 0;
     t_packet replyPacket;
@@ -75,7 +79,7 @@ int main(int argc, char *argv[])
         {
             timeout.tv_usec = 30000;
             timeout.tv_sec = 0;// TO DO change
-            if (socketIsReady(sockfd, &readfds, &timeout) == FAILURE)
+            if (socketIsReadyToRead(sockfd, &readfds, &timeout) == FAILURE)
                 continue;
             int size = receiveResponse((void *)replyBuffer, sockfd, sizeof(replyBuffer));
             triggerErrorIf(size < 0, "recvfrom failed", sockfd);

@@ -28,7 +28,21 @@ int sendRequest(int sockfd, struct sockaddr_in *destAddress, t_packet *request)
     return sendto(sockfd, (void *)request->ip_hdr, ntohs(request->ip_hdr->tot_len), 0, (struct sockaddr *)destAddress, sizeof(struct sockaddr_in));
 }
 
-status socketIsReady(int sockfd, fd_set *readfds, struct timeval *timeout)
+status socketIsReadyToWrite(int sockfd, fd_set *writefds, struct timeval *timeout)
+{
+    FD_SET(sockfd, writefds);
+    if (select(sockfd + 1, NULL, writefds, NULL, timeout) < 0)
+    {
+        printf("write failed");
+        return FAILURE;
+    }
+    if (timeout->tv_sec == 0 && timeout->tv_usec == 0)
+        return FAILURE;
+    FD_CLR(sockfd, writefds);
+    return SUCCESS;
+}
+
+status socketIsReadyToRead(int sockfd, fd_set *readfds, struct timeval *timeout)
 {
     FD_SET(sockfd, readfds);
     if (select(sockfd + 1, readfds, NULL, NULL, timeout) < 0)
