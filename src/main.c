@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
             struct udphdr      *errorPacketPtr = NULL;
             errorPacketPtr = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT((replyPacket.icmp_hdr)));
             u_int16_t seq = ntohs(errorPacketPtr->uh_dport) - DEFAULT_DEST_PORT + 1;
-            if (seq == 0)
+            if (seq <= 0)
                 continue;
             memcpy(&replyPackets[seq - 1], &(*replyPacket.ip_hdr), sizeof(struct iphdr));
             pcknb++;
