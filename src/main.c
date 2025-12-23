@@ -25,11 +25,11 @@ void printIPHeader(struct iphdr *reply)
     printf("%s  ", ip_str);
 }
 
-void sendProbesToDestination(struct sockaddr_in addrs[2], int sockfd)
+void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2])
 {
-    uint8_t             requestBuffer[1024] = {};
+    uint8_t             requestBuffer[BUFFER_SIZE] = {};
     t_udp_packet        requestPacket = {};
-    struct timeval      timeout;
+    struct timeval      timeout = {};
     fd_set              writefds;
     size_t              hops = 0;
     int                 bytesSent;
@@ -57,45 +57,30 @@ void sendProbesToDestination(struct sockaddr_in addrs[2], int sockfd)
         }
         hops++;
     }
-
 }
 
-int main(int argc, char *argv[])
+int receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * PACKET_NUMBER])
 {
-    int                 sockfd;
-    fd_set              readfds;
-    struct timeval      timeout;
-    // long                rtt_microseconds = 0;
-
-    struct iphdr    replyPackets[MAX_HOPS * PACKET_NUMBER] = {};
-
-    struct sockaddr_in  addrs[2] = {0};
-    uint8_t             replyBuffer[1024] = {};
     size_t              hops = 0;
+    struct timeval      timeout = {};
+    size_t              pcknb = 0;
+    u_int8_t            replyBuffer[BUFFER_SIZE] = {};
+    int                 bytesReceived = 0;
+    fd_set              readfds;
+    t_icmp_packet       replyPacket;
 
-    srand(time(NULL));
-    if (argc < 2)
-        return 1;//TO DO add more detailed error
-    printf("%s %s\n", argv[0], argv[1]);
-    setDestinationAddress(&addrs[DESTINATION], argv[1]);
-    setSourceAddress(&addrs[SOURCE], &addrs[DESTINATION]);
-
-    sockfd = initSocketFd();
     FD_ZERO(&readfds);
-
-    sendProbesToDestination(addrs, sockfd);
-    t_icmp_packet replyPacket;
-    size_t pcknb = 0;
     while (hops < MAX_HOPS)
     {
         for (int i = 0; i < PACKET_NUMBER; i++)
         {
             timeout.tv_usec = 30000;
             timeout.tv_sec = 0;// TO DO change
+            memset(replyBuffer, 0, bytesReceived);
             if (socketIsReadyToRead(sockfd, &readfds, &timeout) == FAILURE)
                 continue;
-            int size = receiveResponse((void *)replyBuffer, sockfd, sizeof(replyBuffer));
-            triggerErrorIf(size < 0, "recvfrom failed", sockfd);
+            bytesReceived = receiveResponse((void *)replyBuffer, sockfd, sizeof(replyBuffer));
+            triggerErrorIf(bytesReceived < 0, "recvfrom failed", sockfd);
             if (parsePacket(replyBuffer, &replyPacket.ip_hdr, &replyPacket.icmp_hdr) == FAILURE)
                 continue;
             struct udphdr      *errorPacketPtr = NULL;
@@ -108,6 +93,29 @@ int main(int argc, char *argv[])
         }
         hops ++;
     }
+    return pcknb;
+}
+
+int main(int argc, char *argv[])
+{
+    int                 sockfd;
+    // long                rtt_microseconds = 0;
+
+    struct iphdr    replyPackets[MAX_HOPS * PACKET_NUMBER] = {};
+
+    struct sockaddr_in  addrs[2] = {0};
+    size_t              hops = 0;
+
+    srand(time(NULL));
+    if (argc < 2)
+        return 1;//TO DO add more detailed error
+    printf("%s %s\n", argv[0], argv[1]);
+    setDestinationAddress(&addrs[DESTINATION], argv[1]);
+    setSourceAddress(&addrs[SOURCE], &addrs[DESTINATION]);
+
+    sockfd = initSocketFd();
+    sendProbesToDestination(sockfd, addrs);
+    size_t pcknb = receiveProbesFeedback(sockfd, replyPackets);
     hops = 0;
     struct iphdr tst = {};
     while (hops < MAX_HOPS && pcknb)
