@@ -64,14 +64,13 @@ int main(int argc, char *argv[])
                 (getpid() + (hops * PACKET_NUMBER) + i) & 0xFFFF);
             defineRequestUDPHeader(requestPacket.udp_hdr);
             while (socketIsReadyToWrite(sockfd, &writefds, &timeout))
-                usleep(50);
+                continue;
             triggerErrorIf(sendRequest(sockfd, &addrs[DESTINATION], &requestPacket) < 0, "sendto failed", sockfd);
         }
         hops++;
     }
     hops = 0;
     t_packet replyPacket;
-    (void) replyPackets;
     size_t pcknb = 0;
     while (hops < MAX_HOPS)
     {

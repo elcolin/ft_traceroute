@@ -33,7 +33,7 @@ void defineRequestIPHeader(struct iphdr *ipHeader,
     ipHeader->ihl = 5;                 // 5 * 4 = 20 bytes (no options)
     ipHeader->version = 4;
     ipHeader->tos = 0;
-    ipHeader->tot_len = htons(sizeof(struct iphdr) + sizeof(struct udphdr) + DEFAULT_PADDING);
+    ipHeader->tot_len = htons(sizeof(struct iphdr) + sizeof(struct udphdr));
     ipHeader->id = htons(id);
     ipHeader->frag_off = 0;
     ipHeader->ttl = ttl;
@@ -64,12 +64,12 @@ void defineRequestUDPHeader(struct udphdr *udpHeader)
     static uint16_t dport = 33434;
     udpHeader->uh_sport = htons(rand() | 0x8000);
     udpHeader->uh_dport = htons(dport++);
-    udpHeader->uh_ulen = htons(8);
+    udpHeader->uh_ulen = htons(sizeof(struct udphdr));
     t_pseudo_udp psdudp = {};
     psdudp.dport = udpHeader->uh_dport;
     psdudp.sport = udpHeader->uh_sport;
     psdudp.zero = 0;
-    psdudp.length = udpHeader->len;
+    psdudp.length = udpHeader->uh_ulen;
     psdudp.protocol = 17;
     udpHeader->uh_sum = computeChecksum((uint8_t *) &psdudp, sizeof(psdudp));// udp checksum
 }
