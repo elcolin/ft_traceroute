@@ -56,6 +56,7 @@ int main(int argc, char *argv[])
         {
             timeout.tv_usec = 30000;
             timeout.tv_sec = 0;
+            memset(&requestBuffer, 0, sizeof(requestBuffer));
             initPacket((requestBuffer), &requestPacket);
             defineRequestIPHeader(requestPacket.ip_hdr,
                 addrs[SOURCE].sin_addr.s_addr,
