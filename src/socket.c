@@ -23,7 +23,7 @@ int initSocketFd()
     return sockfd;
 }
 
-int sendRequest(int sockfd, struct sockaddr_in *destAddress, t_packet *request)
+int sendRequest(int sockfd, struct sockaddr_in *destAddress, t_udp_packet *request)
 {
     return sendto(sockfd, (void *)request->ip_hdr, ntohs(request->ip_hdr->tot_len), 0, (struct sockaddr *)destAddress, sizeof(struct sockaddr_in));
 }

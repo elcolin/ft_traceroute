@@ -39,20 +39,23 @@ typedef struct s_pseudo_udp {
     uint16_t length; /* udp length */
 } t_pseudo_udp;
 
-typedef struct s_packet {
+typedef struct s_udp_packet {
     struct iphdr    *ip_hdr;
     struct udphdr   *udp_hdr;
-    struct icmphdr  *icmp_hdr;
-}   t_packet;
+}   t_udp_packet;
 
-void        initPacket(void *buffer, t_packet *packet);
+typedef struct s_icmp_packet {
+    struct iphdr    *ip_hdr;
+    struct icmphdr  *icmp_hdr;
+}   t_icmp_packet;
+
+void        initPacket(void *buffer, t_udp_packet *packet);
 uint16_t    computeChecksum(uint8_t *addr, int count);
 void defineRequestIPHeader(struct iphdr *ipHeader,
                            uint32_t src_ip,
                            uint32_t dst_ip,
                            uint8_t ttl,
                            uint16_t id);
-void defineRequestICMPHeader(struct icmphdr *icmpHeader, uint16_t id, u_int16_t sequenceNumber);
 void defineRequestUDPHeader(struct iphdr *ipHeader, struct udphdr *udpHeader);
 status parsePacket(void *buffer, struct iphdr **ip_header, struct icmphdr **icmp_header);
 

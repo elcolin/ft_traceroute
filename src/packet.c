@@ -1,6 +1,6 @@
 #include "packet.h"
 
-void initPacket(void *buffer, t_packet *packet)
+void initPacket(void *buffer, t_udp_packet *packet)
 {
     packet->ip_hdr = (void *) buffer;
     packet->udp_hdr = IPHDR_SHIFT(buffer);

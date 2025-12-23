@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     struct timeval      timeout;
     // long                rtt_microseconds = 0;
 
-    t_packet    requestPacket = {};
+    t_udp_packet    requestPacket = {};
     struct iphdr    replyPackets[MAX_HOPS * PACKET_NUMBER] = {};
 
     struct sockaddr_in  addrs[2] = {0};
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
         hops++;
     }
     hops = 0;
-    t_packet replyPacket;
+    t_icmp_packet replyPacket;
     size_t pcknb = 0;
     while (hops < MAX_HOPS)
     {

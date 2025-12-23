@@ -17,7 +17,7 @@
 #include "packet.h"
 
 int initSocketFd();
-int sendRequest(int sockfd, struct sockaddr_in *destAddress, t_packet *request);
+int sendRequest(int sockfd, struct sockaddr_in *destAddress, t_udp_packet *request);
 static inline int receiveResponse(void *buffer, int sockfd, u_int16_t buffer_size)
 {
     struct sockaddr_in addr;
