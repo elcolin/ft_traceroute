@@ -25,18 +25,51 @@ void printIPHeader(struct iphdr *reply)
     printf("%s  ", ip_str);
 }
 
+void sendProbesToDestination(struct sockaddr_in addrs[2], int sockfd)
+{
+    uint8_t             requestBuffer[1024] = {};
+    t_udp_packet        requestPacket = {};
+    struct timeval      timeout;
+    fd_set              writefds;
+    size_t              hops = 0;
+    int                 bytesSent;
+
+
+    FD_ZERO(&writefds);
+    while (hops < MAX_HOPS)
+    {
+        for (int i = 0; i < PACKET_NUMBER; i++)
+        {
+            timeout.tv_usec = 30000;
+            timeout.tv_sec = 0;
+            memset(&requestBuffer, 0, bytesSent);
+            initPacket((requestBuffer), &requestPacket);
+            defineRequestIPHeader(requestPacket.ip_hdr,
+                addrs[SOURCE].sin_addr.s_addr,
+                addrs[DESTINATION].sin_addr.s_addr,
+                hops + 1,
+                (getpid() + (hops * PACKET_NUMBER) + i) & 0xFFFF);
+            defineRequestUDPHeader(requestPacket.ip_hdr, requestPacket.udp_hdr);
+            while (socketIsReadyToWrite(sockfd, &writefds, &timeout))
+                continue;
+            bytesSent = sendRequest(sockfd, &addrs[DESTINATION], &requestPacket);
+            triggerErrorIf(bytesSent < 0, "sendto failed", sockfd);
+        }
+        hops++;
+    }
+
+}
+
 int main(int argc, char *argv[])
 {
     int                 sockfd;
-    fd_set              readfds, writefds;
+    fd_set              readfds;
     struct timeval      timeout;
     // long                rtt_microseconds = 0;
 
-    t_udp_packet    requestPacket = {};
     struct iphdr    replyPackets[MAX_HOPS * PACKET_NUMBER] = {};
 
     struct sockaddr_in  addrs[2] = {0};
-    uint8_t             requestBuffer[1024] = {};
     uint8_t             replyBuffer[1024] = {};
     size_t              hops = 0;
 
@@ -49,28 +82,8 @@ int main(int argc, char *argv[])
 
     sockfd = initSocketFd();
     FD_ZERO(&readfds);
-    FD_ZERO(&writefds);
-    while (hops < MAX_HOPS)
-    {
-        for (int i = 0; i < PACKET_NUMBER; i++)
-        {
-            timeout.tv_usec = 30000;
-            timeout.tv_sec = 0;
-            memset(&requestBuffer, 0, sizeof(requestBuffer));
-            initPacket((requestBuffer), &requestPacket);
-            defineRequestIPHeader(requestPacket.ip_hdr,
-                addrs[SOURCE].sin_addr.s_addr,
-                addrs[DESTINATION].sin_addr.s_addr,
-                hops + 1,
-                (getpid() + (hops * PACKET_NUMBER) + i) & 0xFFFF);
-            defineRequestUDPHeader(requestPacket.ip_hdr, requestPacket.udp_hdr);
-            while (socketIsReadyToWrite(sockfd, &writefds, &timeout))
-                continue;
-            triggerErrorIf(sendRequest(sockfd, &addrs[DESTINATION], &requestPacket) < 0, "sendto failed", sockfd);
-        }
-        hops++;
-    }
-    hops = 0;
+
+    sendProbesToDestination(addrs, sockfd);
     t_icmp_packet replyPacket;
     size_t pcknb = 0;
     while (hops < MAX_HOPS)
