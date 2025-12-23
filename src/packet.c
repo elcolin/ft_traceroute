@@ -48,7 +48,7 @@ void defineRequestUDPHeader(struct iphdr *ipHeader, struct udphdr *udpHeader)
 {
     // toodo change
     uint8_t tampon[1024] = {};
-    static uint16_t dport = 33434;
+    static uint16_t dport = DEFAULT_DEST_PORT;
     udpHeader->uh_sport = htons(rand() | 0x8000);
     udpHeader->uh_dport = htons(dport++);
     udpHeader->uh_ulen = htons(sizeof(struct udphdr));
