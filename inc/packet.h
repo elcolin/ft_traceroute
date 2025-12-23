@@ -32,8 +32,8 @@
 #define ICMPHDR_SHIFT(start) ((void *)start + ICMPHDR_SIZE)
 
 typedef struct s_pseudo_udp {
-    uint16_t sport;	/* source port */
-    uint16_t dport;	/* destination port */
+    uint32_t sport;	/* source port */
+    uint32_t dport;	/* destination port */
     uint8_t  zero;
     uint8_t  protocol;		
     uint16_t length; /* udp length */
