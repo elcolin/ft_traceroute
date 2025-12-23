@@ -44,6 +44,19 @@ void defineRequestIPHeader(struct iphdr *ipHeader,
     ipHeader->check = computeChecksum((uint8_t *)ipHeader, sizeof(*ipHeader));
 }
 
+void defineRequestICMPHeader(struct icmphdr *icmpHeader, uint16_t id, u_int16_t sequenceNumber)
+{
+    // Setting up the ICMP header
+    icmpHeader->type = ICMP_ECHO;
+    icmpHeader->code = ICMP_CODE;
+    icmpHeader->un.echo.id = htons(id);
+    icmpHeader->un.echo.sequence = htons(sequenceNumber);
+    icmpHeader->checksum = 0;
+    icmpHeader->checksum = computeChecksum((uint8_t *)icmpHeader, sizeof(*icmpHeader));
+}
+
+
+
 void defineRequestUDPHeader(struct iphdr *ipHeader, struct udphdr *udpHeader)
 {
     // toodo change
