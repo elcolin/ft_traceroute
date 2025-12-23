@@ -32,8 +32,8 @@
 #define ICMPHDR_SHIFT(start) ((void *)start + ICMPHDR_SIZE)
 
 typedef struct s_pseudo_udp {
-    uint32_t sport;	/* source port */
-    uint32_t dport;	/* destination port */
+    uint32_t saddr;	/* source addr */
+    uint32_t daddr;	/* destination addr */
     uint8_t  zero;
     uint8_t  protocol;		
     uint16_t length; /* udp length */
@@ -53,7 +53,7 @@ void defineRequestIPHeader(struct iphdr *ipHeader,
                            uint8_t ttl,
                            uint16_t id);
 void defineRequestICMPHeader(struct icmphdr *icmpHeader, uint16_t id, u_int16_t sequenceNumber);
-void defineRequestUDPHeader(struct udphdr *udpHeader);
+void defineRequestUDPHeader(struct iphdr *ipHeader, struct udphdr *udpHeader);
 status parsePacket(void *buffer, struct iphdr **ip_header, struct icmphdr **icmp_header);
 
 #endif

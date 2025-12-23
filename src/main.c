@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
                 addrs[DESTINATION].sin_addr.s_addr,
                 hops + 1,
                 (getpid() + (hops * PACKET_NUMBER) + i) & 0xFFFF);
-            defineRequestUDPHeader(requestPacket.udp_hdr);
+            defineRequestUDPHeader(requestPacket.ip_hdr, requestPacket.udp_hdr);
             while (socketIsReadyToWrite(sockfd, &writefds, &timeout))
                 continue;
             triggerErrorIf(sendRequest(sockfd, &addrs[DESTINATION], &requestPacket) < 0, "sendto failed", sockfd);

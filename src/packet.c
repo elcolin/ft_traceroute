@@ -57,21 +57,22 @@ void defineRequestICMPHeader(struct icmphdr *icmpHeader, uint16_t id, u_int16_t 
 
 
 
-void defineRequestUDPHeader(struct udphdr *udpHeader)
+void defineRequestUDPHeader(struct iphdr *ipHeader, struct udphdr *udpHeader)
 {
     // toodo change
-
+    uint8_t tampon[1024] = {};
     static uint16_t dport = 33434;
     udpHeader->uh_sport = htons(rand() | 0x8000);
     udpHeader->uh_dport = htons(dport++);
     udpHeader->uh_ulen = htons(sizeof(struct udphdr));
-    t_pseudo_udp psdudp = {};
-    psdudp.dport = udpHeader->uh_dport;
-    psdudp.sport = udpHeader->uh_sport;
-    psdudp.zero = 0;
-    psdudp.length = udpHeader->uh_ulen;
-    psdudp.protocol = 17;
-    udpHeader->uh_sum = computeChecksum((uint8_t *) &psdudp, sizeof(psdudp));// udp checksum
+    t_pseudo_udp *psdudp = (t_pseudo_udp *) tampon;
+    psdudp->daddr = ipHeader->daddr;
+    psdudp->saddr = ipHeader->saddr;
+    psdudp->zero = 0;
+    psdudp->length = udpHeader->uh_ulen;
+    psdudp->protocol = 17;
+    memcpy(tampon + sizeof(t_pseudo_udp), udpHeader, sizeof(*udpHeader));
+    udpHeader->uh_sum = computeChecksum(tampon, sizeof(*psdudp) + sizeof(*udpHeader));// udp checksum
 }
 
 status parsePacket(void *buffer, struct iphdr **ip_header, struct icmphdr **icmp_header)
