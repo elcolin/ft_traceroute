@@ -59,11 +59,10 @@ void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2])
     }
 }
 
-int receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * PACKET_NUMBER])
+void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * PACKET_NUMBER])
 {
     size_t              hops = 0;
     struct timeval      timeout = {};
-    size_t              pcknb = 0;
     u_int8_t            replyBuffer[BUFFER_SIZE] = {};
     int                 bytesReceived = 0;
     fd_set              readfds;
@@ -89,11 +88,9 @@ int receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * PACKE
             if (seq <= 0)
                 continue;
             memcpy(&replyPackets[seq - 1], &(*replyPacket.ip_hdr), sizeof(struct iphdr));
-            pcknb++;
         }
         hops ++;
     }
-    return pcknb;
 }
 
 void printResponses(struct iphdr replyPackets[MAX_HOPS * PACKET_NUMBER])
