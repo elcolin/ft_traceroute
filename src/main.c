@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
         return 1;//TO DO add more detailed error
     printf("%s %s\n", argv[0], argv[1]);
     setDestinationAddress(&addrs[DESTINATION], argv[1]);
-    setSourceAddress(&addrs[SOURCE], &addrs[DESTINATION]);
+    setSourceAddress(&addrs[SOURCE], addrs[DESTINATION].sin_family);
 
     sockfd = initSocketFd();
     sendProbesToDestination(sockfd, addrs);

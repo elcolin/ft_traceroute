@@ -28,7 +28,7 @@ void setDestinationAddress(struct sockaddr_in *destAddress, char *ip_address)
     }
 }
 
-void setSourceAddress(struct sockaddr_in *srcAddress, const struct sockaddr_in *destAddress)
+void setSourceAddress(struct sockaddr_in *srcAddress, u_int16_t familyType)
 {
     memset(srcAddress, 0, sizeof(*srcAddress));
     struct ifaddrs *networkInterfaces = NULL;
@@ -41,7 +41,7 @@ void setSourceAddress(struct sockaddr_in *srcAddress, const struct sockaddr_in *
     struct ifaddrs *idx = networkInterfaces;
     while (idx)
     {
-        if ((idx->ifa_addr->sa_family == destAddress->sin_family) 
+        if ((idx->ifa_addr->sa_family == familyType) 
             && !(idx->ifa_flags & IFF_LOOPBACK) 
             && (idx->ifa_flags & IFF_BROADCAST) 
             && (idx->ifa_flags & IFF_UP))
