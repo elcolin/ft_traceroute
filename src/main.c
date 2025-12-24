@@ -96,15 +96,31 @@ int receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * PACKE
     return pcknb;
 }
 
+void printResponses(struct iphdr replyPackets[MAX_HOPS * PACKET_NUMBER])
+{
+    size_t              hops = 0;
+    struct iphdr tst = {};
+
+    while (hops < MAX_HOPS)
+    {
+        printf("%ld ", hops + 1);
+        for (int i = 0; i < PACKET_NUMBER; i++)
+        {
+            if (memcmp(&replyPackets[hops * PACKET_NUMBER + i], &tst, sizeof(struct iphdr)))
+                printIPHeader(&replyPackets[hops * PACKET_NUMBER + i]);
+            else
+                printf("* ");
+        }
+        printf("\n");
+        hops ++;
+    }
+}
+
 int main(int argc, char *argv[])
 {
     int                 sockfd;
-    // long                rtt_microseconds = 0;
-
-    struct iphdr    replyPackets[MAX_HOPS * PACKET_NUMBER] = {};
-
+    struct iphdr        replyPackets[MAX_HOPS * PACKET_NUMBER] = {};
     struct sockaddr_in  addrs[2] = {0};
-    size_t              hops = 0;
 
     srand(time(NULL));
     if (argc < 2)
@@ -115,23 +131,6 @@ int main(int argc, char *argv[])
 
     sockfd = initSocketFd();
     sendProbesToDestination(sockfd, addrs);
-    size_t pcknb = receiveProbesFeedback(sockfd, replyPackets);
-    hops = 0;
-    struct iphdr tst = {};
-    while (hops < MAX_HOPS && pcknb)
-    {
-        printf("%ld ", hops + 1);
-        for (int i = 0; i < PACKET_NUMBER; i++)
-        {
-            if (memcmp(&replyPackets[hops * PACKET_NUMBER + i], &tst, sizeof(struct iphdr)))
-            {
-                pcknb--;
-                printIPHeader(&replyPackets[hops * PACKET_NUMBER + i]);
-            }
-            else
-                printf("* ");
-        }
-        printf("\n");
-        hops ++;
-    }
+    receiveProbesFeedback(sockfd, replyPackets);
+    printResponses(replyPackets);
 }
