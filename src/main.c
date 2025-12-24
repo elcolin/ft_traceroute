@@ -132,5 +132,6 @@ int main(int argc, char *argv[])
     sockfd = initSocketFd();
     sendProbesToDestination(sockfd, addrs);
     receiveProbesFeedback(sockfd, replyPackets);
+    close(sockfd);
     printResponses(replyPackets);
 }
