@@ -76,11 +76,11 @@ void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * PACK
             timeout.tv_usec = 30000;
             timeout.tv_sec = 0;// TO DO change
             memset(replyBuffer, 0, bytesReceived);
-            if (socketIsReadyToRead(sockfd, &readfds, &timeout) == FAILURE)
+            if (socketIsReadyToRead(sockfd, &readfds, &timeout) == FAILURE) // If Timeout
                 continue;
             bytesReceived = receiveResponse((void *)replyBuffer, sockfd, sizeof(replyBuffer));
             triggerErrorIf(bytesReceived < 0, "recvfrom failed", sockfd);
-            if (parsePacket(replyBuffer, &replyPacket.ip_hdr, &replyPacket.icmp_hdr) == FAILURE)
+            if (parsePacket(replyBuffer, &replyPacket.ip_hdr, &replyPacket.icmp_hdr) == FAILURE) // If no valid packet
                 continue;
             struct udphdr      *errorPacketPtr = NULL;
             errorPacketPtr = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT((replyPacket.icmp_hdr)));

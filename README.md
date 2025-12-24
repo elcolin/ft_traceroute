@@ -36,6 +36,5 @@ data,  padded  with zero octets  at the end (if  necessary)  to  make  a
 multiple of two octets.
 
 ## Notes
-* Move the 3 different loops in self contained function
 * Make sure all structure are set to zero before sending new infos
-* 
+* Add id verification to avoid multiple instances of the program
