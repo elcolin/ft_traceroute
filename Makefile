@@ -1,11 +1,11 @@
 CC      = gcc
-CFLAGS  = -Wall -Wextra -Werror -g3 -Iinc
+CFLAGS  = -Wall -Wextra -Werror -O1 -Iinc
 EXEC    = ft_traceroute
 
 SRCDIR  = src
 OBJDIR  = obj
 
-SRCS    = $(addprefix $(SRCDIR)/, main.c socket.c addr.c packet.c)
+SRCS    = $(addprefix $(SRCDIR)/, main.c socket.c addr.c packet.c utils.c)
 OBJS    = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRCS))
 
 all: $(EXEC)

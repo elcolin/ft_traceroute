@@ -4,8 +4,10 @@
 #include "socket.h"
 #include "addr.h"
 #include "packet.h"
+#include "utils.h"
 // time
 #include <time.h>
+#include <sys/time.h>
 
 #define PACKET_NUMBER 3
 #define MAX_HOPS 30

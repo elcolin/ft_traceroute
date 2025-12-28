@@ -1,15 +1,6 @@
 #include "ft_traceroute.h"
 
-void triggerErrorNoFreeingIf(bool condition, char *msg, char *reason)
-{
-    if (condition)
-    {
-        fprintf(stderr, "%s: %s", msg, reason);
-        exit(EXIT_FAILURE);
-    }
-}
-
-void printIPHeader(struct iphdr *reply)
+inline void printIPHeader(struct iphdr *reply)
 {
     if (reply == NULL)
     {
@@ -25,14 +16,14 @@ void printIPHeader(struct iphdr *reply)
     printf("%s  ", ip_str);
 }
 
-void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2])
+void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct timeval requestTimestamp[MAX_HOPS * PACKET_NUMBER])
 {
     uint8_t             requestBuffer[BUFFER_SIZE] = {};
     t_udp_packet        requestPacket = {};
     struct timeval      timeout = {};
     fd_set              writefds;
     size_t              hops = 0;
-    int                 bytesSent;
+    int                 bytesSent = 0;
 
 
     FD_ZERO(&writefds);
@@ -52,6 +43,7 @@ void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2])
             defineRequestUDPHeader(requestPacket.ip_hdr, requestPacket.udp_hdr);
             while (socketIsReadyToWrite(sockfd, &writefds, &timeout))
                 continue;
+            gettimeofday(&requestTimestamp[hops * PACKET_NUMBER + i], NULL);
             bytesSent = sendRequest(sockfd, &addrs[DESTINATION], &requestPacket);
             triggerErrorIf(bytesSent < 0, "sendto failed", sockfd);
         }
@@ -59,7 +51,7 @@ void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2])
     }
 }
 
-void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * PACKET_NUMBER])
+void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * PACKET_NUMBER], struct timeval replyTimestamp[MAX_HOPS * PACKET_NUMBER])
 {
     size_t              hops = 0;
     struct timeval      timeout = {};
@@ -87,16 +79,18 @@ void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * PACK
             u_int16_t seq = ntohs(errorPacketPtr->uh_dport) - DEFAULT_DEST_PORT + 1;
             if (seq <= 0)
                 continue;
+            gettimeofday(&replyTimestamp[seq - 1], NULL);
             memcpy(&replyPackets[seq - 1], &(*replyPacket.ip_hdr), sizeof(struct iphdr));
         }
         hops ++;
     }
 }
 
-void printResponses(struct iphdr replyPackets[MAX_HOPS * PACKET_NUMBER])
+void printResponses(struct iphdr replyPackets[MAX_HOPS * PACKET_NUMBER], struct timeval requestTimestamp[MAX_HOPS * PACKET_NUMBER], struct timeval replyTimestamp[MAX_HOPS * PACKET_NUMBER])
 {
     size_t              hops = 0;
     struct iphdr tst = {};
+    long  rtt_microseconds = 0;
 
     while (hops < MAX_HOPS)
     {
@@ -108,6 +102,14 @@ void printResponses(struct iphdr replyPackets[MAX_HOPS * PACKET_NUMBER])
             else
                 printf("* ");
         }
+        for (int i = 0; i < PACKET_NUMBER; i++)
+        {
+            if (memcmp(&replyPackets[hops * PACKET_NUMBER + i], &tst, sizeof(struct iphdr)))
+            {
+                rtt_microseconds = get_elapsed_microseconds(requestTimestamp[hops * PACKET_NUMBER + i], replyTimestamp[hops * PACKET_NUMBER + i]);
+                printf("%.3f ms  ", rtt_microseconds / 1000.0);
+            }
+        }
         printf("\n");
         hops ++;
     }
@@ -118,6 +120,8 @@ int main(int argc, char *argv[])
     int                 sockfd;
     struct iphdr        replyPackets[MAX_HOPS * PACKET_NUMBER] = {};
     struct sockaddr_in  addrs[2] = {0};
+    struct timeval      requestTimestamp[MAX_HOPS * PACKET_NUMBER] = {};
+    struct timeval      replyTimestamp[MAX_HOPS * PACKET_NUMBER] = {};
 
     srand(time(NULL));
     if (argc < 2)
@@ -127,8 +131,8 @@ int main(int argc, char *argv[])
     setSourceAddress(&addrs[SOURCE], addrs[DESTINATION].sin_family);
 
     sockfd = initSocketFd();
-    sendProbesToDestination(sockfd, addrs);
-    receiveProbesFeedback(sockfd, replyPackets);
+    sendProbesToDestination(sockfd, addrs, requestTimestamp);
+    receiveProbesFeedback(sockfd, replyPackets, replyTimestamp);
     close(sockfd);
-    printResponses(replyPackets);
+    printResponses(replyPackets, requestTimestamp, replyTimestamp);
 }

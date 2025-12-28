@@ -1,6 +1,16 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+//abs
+#include <stdlib.h>
+#include <stdio.h>
+
+//time.h
+#include <sys/time.h>
+
+//uint64_t
+#include <stdint.h>
+
 typedef enum
 {
    FALSE,
@@ -12,5 +22,9 @@ typedef enum
    SUCCESS,
    FAILURE
 }  status;
+
+void triggerErrorNoFreeingIf(bool condition, char *msg, char *reason);
+long get_elapsed_microseconds(struct timeval start, struct timeval end);
+
 
 #endif

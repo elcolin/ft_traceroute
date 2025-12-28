@@ -75,7 +75,7 @@ void defineRequestUDPHeader(struct iphdr *ipHeader, struct udphdr *udpHeader)
     udpHeader->uh_sum = computeChecksum(tampon, sizeof(*psdudp) + sizeof(*udpHeader));// udp checksum
 }
 
-status parsePacket(void *buffer, struct iphdr **ip_header, struct icmphdr **icmp_header)
+inline status parsePacket(void *buffer, struct iphdr **ip_header, struct icmphdr **icmp_header)
 {
     *ip_header = (struct iphdr *)buffer;   
     *icmp_header = (struct icmphdr *)(buffer + ((*ip_header)->ihl * 4));
