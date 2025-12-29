@@ -1,5 +1,21 @@
 #include "ft_traceroute.h"
 
+inline void printIPHeader(struct iphdr *reply)
+{
+    if (reply == NULL)
+    {
+        printf("* ");
+        return;
+    }
+
+    uint32_t saddr = reply->saddr; // in network byte order
+    struct in_addr addr;
+    addr.s_addr = saddr;
+
+    char *ip_str = inet_ntoa(addr);
+    printf("%s  ", ip_str);
+}
+
 void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct timeval requestTimestamp[MAX_HOPS * PACKET_NUMBER])
 {
     uint8_t             requestBuffer[BUFFER_SIZE] = {};
