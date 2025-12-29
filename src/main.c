@@ -31,7 +31,7 @@ void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct tim
     {
         for (int i = 0; i < PACKET_NUMBER; i++)
         {
-            timeout.tv_usec = 30000;
+            timeout.tv_usec = JITTER;
             timeout.tv_sec = 0;
             memset(&requestBuffer, 0, bytesSent);
             initPacket((requestBuffer), &requestPacket);
@@ -65,7 +65,7 @@ void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * PACK
     {
         for (int i = 0; i < PACKET_NUMBER; i++)
         {
-            timeout.tv_usec = 30000;
+            timeout.tv_usec = JITTER;
             timeout.tv_sec = 0;// TO DO change
             memset(replyBuffer, 0, bytesReceived);
             if (socketIsReadyToRead(sockfd, &readfds, &timeout) == FAILURE) // If Timeout
