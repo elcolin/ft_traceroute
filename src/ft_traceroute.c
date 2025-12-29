@@ -42,6 +42,7 @@ void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * PACK
     int                 bytesReceived = 0;
     fd_set              readfds;
     t_icmp_packet       replyPacket;
+    struct udphdr      *errorPacketPtr = NULL;
 
     FD_ZERO(&readfds);
     while (hops < MAX_HOPS)
@@ -57,7 +58,6 @@ void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * PACK
             triggerErrorIf(bytesReceived < 0, "recvfrom failed", sockfd);
             if (parsePacket(replyBuffer, &replyPacket.ip_hdr, &replyPacket.icmp_hdr) == FAILURE) // If no valid packet
                 continue;
-            struct udphdr      *errorPacketPtr = NULL;
             errorPacketPtr = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT((replyPacket.icmp_hdr)));
             u_int16_t seq = ntohs(errorPacketPtr->uh_dport) - DEFAULT_DEST_PORT + 1;
             if (seq <= 0)
