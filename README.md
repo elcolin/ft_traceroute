@@ -1,5 +1,18 @@
 
 # FT_TRACEROUTE
+Find the path to your destination (ip or domain name), trace your route and check its round trip time.
+Don't forget to make !
+```bash
+make
+```
+Then
+```bash
+sudo ./ft_traceroute 8.8.8.8
+```
+or
+```bash
+sudo ./ft_traceroute google.com
+```
 
 ## Packet
 
