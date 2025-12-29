@@ -1,12 +1,12 @@
 #include "packet.h"
 
-void initPacket(void *buffer, t_udp_packet *packet)
+inline void initPacket(void *buffer, t_udp_packet *packet)
 {
     packet->ip_hdr = (void *) buffer;
     packet->udp_hdr = IPHDR_SHIFT(buffer);
 }
 
-uint16_t computeChecksum(uint8_t *addr, int count)
+inline uint16_t computeChecksum(uint8_t *addr, int count)
 {
     uint32_t sum = 0;
     uint16_t *ptr = (uint16_t *) addr;
@@ -54,8 +54,6 @@ void defineRequestICMPHeader(struct icmphdr *icmpHeader, uint16_t id, u_int16_t 
     icmpHeader->checksum = 0;
     icmpHeader->checksum = computeChecksum((uint8_t *)icmpHeader, sizeof(*icmpHeader));
 }
-
-
 
 void defineRequestUDPHeader(struct iphdr *ipHeader, struct udphdr *udpHeader)
 {

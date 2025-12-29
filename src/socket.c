@@ -28,7 +28,7 @@ int sendRequest(int sockfd, struct sockaddr_in *destAddress, t_udp_packet *reque
     return sendto(sockfd, (void *)request->ip_hdr, ntohs(request->ip_hdr->tot_len), 0, (struct sockaddr *)destAddress, sizeof(struct sockaddr_in));
 }
 
-status socketIsReadyToWrite(int sockfd, fd_set *writefds, struct timeval *timeout)
+inline status socketIsReadyToWrite(int sockfd, fd_set *writefds, struct timeval *timeout)
 {
     FD_SET(sockfd, writefds);
     if (select(sockfd + 1, NULL, writefds, NULL, timeout) < 0)
@@ -42,7 +42,7 @@ status socketIsReadyToWrite(int sockfd, fd_set *writefds, struct timeval *timeou
     return SUCCESS;
 }
 
-status socketIsReadyToRead(int sockfd, fd_set *readfds, struct timeval *timeout)
+inline status socketIsReadyToRead(int sockfd, fd_set *readfds, struct timeval *timeout)
 {
     FD_SET(sockfd, readfds);
     if (select(sockfd + 1, readfds, NULL, NULL, timeout) < 0)
