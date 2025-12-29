@@ -26,6 +26,11 @@ static inline void triggerErrorIf(int condition, char *msg, int sockfd)
         close(sockfd);
         exit(EXIT_FAILURE);
     }
-}
+};
+
+void printIPHeader(struct iphdr *reply);
+void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct timeval requestTimestamp[MAX_HOPS * PACKET_NUMBER]);
+void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * PACKET_NUMBER], struct timeval replyTimestamp[MAX_HOPS * PACKET_NUMBER]);
+void printResponses(struct iphdr replyPackets[MAX_HOPS * PACKET_NUMBER], struct timeval requestTimestamp[MAX_HOPS * PACKET_NUMBER], struct timeval replyTimestamp[MAX_HOPS * PACKET_NUMBER]);
 
 #endif
