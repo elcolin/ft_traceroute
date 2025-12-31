@@ -1,5 +1,21 @@
 #include "ft_traceroute.h"
 
+void getIpAddressString(struct iphdr *packet, char **dest)
+{
+    if (packet == NULL)
+    {
+        printf("* ");
+        return;
+    }
+
+    uint32_t saddr = packet->saddr; // in network byte order
+    struct in_addr addr;
+    addr.s_addr = saddr;
+
+    char *ip_str = inet_ntoa(addr);
+    memcpy(*dest, inet_ntoa, strlen(ip_str));
+}
+
 inline void printIPHeader(struct iphdr *reply)
 {
     if (reply == NULL)
@@ -16,7 +32,7 @@ inline void printIPHeader(struct iphdr *reply)
     printf("%s  ", ip_str);
 }
 
-void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct timeval requestTimestamp[MAX_HOPS * PACKET_NUMBER])
+void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct timeval requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES])
 {
     uint8_t             requestBuffer[BUFFER_SIZE] = {};
     t_udp_packet        requestPacket = {};
@@ -28,7 +44,7 @@ void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct tim
     FD_ZERO(&writefds);
     while (hops < MAX_HOPS)
     {
-        for (int i = 0; i < PACKET_NUMBER; i++)
+        for (int i = 0; i < NUMBER_OF_PROBES; i++)
         {
             timeout.tv_usec = JITTER;
             timeout.tv_sec = 0;
@@ -38,11 +54,11 @@ void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct tim
                 addrs[SOURCE].sin_addr.s_addr,
                 addrs[DESTINATION].sin_addr.s_addr,
                 hops + 1,
-                (getpid() + (hops * PACKET_NUMBER) + i) & 0xFFFF);
+                (getpid() + (PACKET_NUMBER(hops)) + i) & 0xFFFF);
             defineRequestUDPHeader(requestPacket.ip_hdr, requestPacket.udp_hdr);
             while (socketIsReadyToWrite(sockfd, &writefds, &timeout))
                 continue;
-            gettimeofday(&requestTimestamp[hops * PACKET_NUMBER + i], NULL);
+            gettimeofday(&requestTimestamp[PACKET_NUMBER(hops) + i], NULL);
             bytesSent = sendRequest(sockfd, &addrs[DESTINATION], &requestPacket);
             triggerErrorIf(bytesSent < 0, "sendto failed", sockfd);
         }
@@ -50,7 +66,7 @@ void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct tim
     }
 }
 
-void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * PACKET_NUMBER], struct timeval replyTimestamp[MAX_HOPS * PACKET_NUMBER])
+void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES])
 {
     size_t              hops = 0;
     struct timeval      timeout = {};
@@ -63,7 +79,7 @@ void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * PACK
     FD_ZERO(&readfds);
     while (hops < MAX_HOPS)
     {
-        for (int i = 0; i < PACKET_NUMBER; i++)
+        for (int i = 0; i < NUMBER_OF_PROBES; i++)
         {
             timeout.tv_usec = JITTER;
             timeout.tv_sec = 0;// TO DO change
@@ -75,40 +91,47 @@ void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * PACK
             if (parsePacket(replyBuffer, &replyPacket.ip_hdr, &replyPacket.icmp_hdr) == FAILURE) // If no valid packet
                 continue;
             errorPacketPtr = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT((replyPacket.icmp_hdr)));
-            u_int16_t seq = ntohs(errorPacketPtr->uh_dport) - DEFAULT_DEST_PORT + 1;
-            if (seq <= 0)
-                continue;
-            gettimeofday(&replyTimestamp[seq - 1], NULL);
-            memcpy(&replyPackets[seq - 1], &(*replyPacket.ip_hdr), sizeof(struct iphdr));
+            u_int16_t seq = ntohs(errorPacketPtr->uh_dport) - DEFAULT_DEST_PORT; //
+            gettimeofday(&replyTimestamp[seq], NULL);
+            memcpy(&replyPackets[seq], &(*replyPacket.ip_hdr), sizeof(struct iphdr));
         }
         hops ++;
     }
 }
 
-void printResponses(struct iphdr replyPackets[MAX_HOPS * PACKET_NUMBER], struct timeval requestTimestamp[MAX_HOPS * PACKET_NUMBER], struct timeval replyTimestamp[MAX_HOPS * PACKET_NUMBER])
+void printResponses(struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], struct timeval requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES], struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES])
 {
     size_t  hops = 0;
     struct  iphdr tst = {};
     long    rtt_microseconds = 0;
+    bool    hopHasBeenPrinted[NUMBER_OF_PROBES] = {0};
+
+
 
     while (hops < MAX_HOPS)
     {
         printf("%ld ", hops + 1);
-        for (int i = 0; i < PACKET_NUMBER; i++)
+        for (int i = 0; i < NUMBER_OF_PROBES; i++)
         {
-            if (memcmp(&replyPackets[hops * PACKET_NUMBER + i], &tst, sizeof(struct iphdr)))
-                printIPHeader(&replyPackets[hops * PACKET_NUMBER + i]);
-            else
-                printf("* ");
-        }
-        for (int i = 0; i < PACKET_NUMBER; i++)
-        {
-            if (memcmp(&replyPackets[hops * PACKET_NUMBER + i], &tst, sizeof(struct iphdr)))
+            if (!memcmp(&replyPackets[PACKET_NUMBER(hops) + i], &tst, sizeof(struct iphdr)))
             {
-                rtt_microseconds = get_elapsed_microseconds(requestTimestamp[hops * PACKET_NUMBER + i], replyTimestamp[hops * PACKET_NUMBER + i]);
-                printf("%.3f ms  ", rtt_microseconds / 1000.0);
+                printf("* ");
+                continue;
+            }
+            if (hopHasBeenPrinted[i] == TRUE)
+                continue;
+            printIPHeader(&replyPackets[PACKET_NUMBER(hops) + i]);
+            for (int j = i; j < NUMBER_OF_PROBES; j++)
+            {
+                if (!memcmp(&replyPackets[PACKET_NUMBER(hops) + i].saddr, &replyPackets[PACKET_NUMBER(hops) + j].saddr, sizeof(uint32_t)))
+                {
+                    rtt_microseconds = get_elapsed_microseconds(requestTimestamp[PACKET_NUMBER(hops) + j], replyTimestamp[PACKET_NUMBER(hops) + j]);
+                    printf("%.3f ms  ", rtt_microseconds / 1000.0);
+                    hopHasBeenPrinted[j] = TRUE;
+                }
             }
         }
+        memset(&hopHasBeenPrinted, FALSE, NUMBER_OF_PROBES * sizeof(bool));
         printf("\n");
         hops ++;
     }

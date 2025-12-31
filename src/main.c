@@ -3,10 +3,10 @@
 int main(int argc, char *argv[])
 {
     int                 sockfd;
-    struct iphdr        replyPackets[MAX_HOPS * PACKET_NUMBER] = {};
+    struct iphdr        replyPackets[MAX_HOPS * NUMBER_OF_PROBES] = {};
     struct sockaddr_in  addrs[2] = {0};
-    struct timeval      requestTimestamp[MAX_HOPS * PACKET_NUMBER] = {};
-    struct timeval      replyTimestamp[MAX_HOPS * PACKET_NUMBER] = {};
+    struct timeval      requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES] = {};
+    struct timeval      replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES] = {};
 
     srand(time(NULL));
     if (argc < 2)

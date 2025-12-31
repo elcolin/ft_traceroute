@@ -9,9 +9,10 @@
 #include <time.h>
 #include <sys/time.h>
 
-#define PACKET_NUMBER 3
+#define NUMBER_OF_PROBES 3
 #define MAX_HOPS 30
 #define JITTER 30000
+#define PACKET_NUMBER(x) ((x * NUMBER_OF_PROBES))
 
 enum ADDR_TYPE{
     SOURCE,
@@ -29,8 +30,8 @@ static inline void triggerErrorIf(int condition, char *msg, int sockfd)
 };
 
 void printIPHeader(struct iphdr *reply);
-void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct timeval requestTimestamp[MAX_HOPS * PACKET_NUMBER]);
-void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * PACKET_NUMBER], struct timeval replyTimestamp[MAX_HOPS * PACKET_NUMBER]);
-void printResponses(struct iphdr replyPackets[MAX_HOPS * PACKET_NUMBER], struct timeval requestTimestamp[MAX_HOPS * PACKET_NUMBER], struct timeval replyTimestamp[MAX_HOPS * PACKET_NUMBER]);
+void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct timeval requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES]);
+void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES]);
+void printResponses(struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], struct timeval requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES], struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES]);
 
 #endif
