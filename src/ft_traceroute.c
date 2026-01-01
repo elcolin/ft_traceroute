@@ -40,7 +40,7 @@ void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct tim
                 hops + 1,
                 (getpid() + (PACKET_NUMBER(hops)) + i) & 0xFFFF);
             defineRequestUDPHeader(requestPacket.ip_hdr, requestPacket.udp_hdr);
-            while (socketIsReadyToWrite(sockfd, &writefds, &timeout))
+            while (socketIsReadyToWrite(sockfd, &writefds, &timeout) == FAILURE)
                 continue;
             gettimeofday(&requestTimestamp[PACKET_NUMBER(hops) + i], NULL);
             bytesSent = sendRequest(sockfd, &addrs[DESTINATION], &requestPacket);
