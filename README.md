@@ -51,3 +51,4 @@ multiple of two octets.
 ## Notes
 * Make sure all structure are set to zero before sending new infos
 * Add id verification to avoid multiple instances of the program
+* Add correct timeout for appropriate packet
