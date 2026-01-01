@@ -1,21 +1,5 @@
 #include "ft_traceroute.h"
 
-void getIpAddressString(struct iphdr *packet, char **dest)
-{
-    if (packet == NULL)
-    {
-        printf("* ");
-        return;
-    }
-
-    uint32_t saddr = packet->saddr; // in network byte order
-    struct in_addr addr;
-    addr.s_addr = saddr;
-
-    char *ip_str = inet_ntoa(addr);
-    memcpy(*dest, inet_ntoa, strlen(ip_str));
-}
-
 inline void printIPHeader(struct iphdr *reply)
 {
     if (reply == NULL)
@@ -105,8 +89,6 @@ void printResponses(struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], stru
     struct  iphdr tst = {};
     long    rtt_microseconds = 0;
     bool    hopHasBeenPrinted[NUMBER_OF_PROBES] = {0};
-
-
 
     while (hops < MAX_HOPS)
     {
