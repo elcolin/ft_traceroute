@@ -105,12 +105,11 @@ void printResponses(struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], stru
             printIPHeader(&replyPackets[PACKET_NUMBER(hops) + i]);
             for (int j = i; j < NUMBER_OF_PROBES; j++)
             {
-                if (!memcmp(&replyPackets[PACKET_NUMBER(hops) + i].saddr, &replyPackets[PACKET_NUMBER(hops) + j].saddr, sizeof(uint32_t)))
-                {
-                    rtt_microseconds = get_elapsed_microseconds(requestTimestamp[PACKET_NUMBER(hops) + j], replyTimestamp[PACKET_NUMBER(hops) + j]);
-                    printf("%.3f ms  ", rtt_microseconds / 1000.0);
-                    hopHasBeenPrinted[j] = TRUE;
-                }
+                if (memcmp(&replyPackets[PACKET_NUMBER(hops) + i].saddr, &replyPackets[PACKET_NUMBER(hops) + j].saddr, sizeof(uint32_t)))
+                    continue;
+                rtt_microseconds = get_elapsed_microseconds(requestTimestamp[PACKET_NUMBER(hops) + j], replyTimestamp[PACKET_NUMBER(hops) + j]);
+                printf("%.3f ms  ", rtt_microseconds / 1000.0);
+                hopHasBeenPrinted[j] = TRUE;
             }
         }
         memset(&hopHasBeenPrinted, FALSE, NUMBER_OF_PROBES * sizeof(bool));
