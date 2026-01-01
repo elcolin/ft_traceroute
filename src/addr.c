@@ -5,12 +5,13 @@ status resolveFQDN(char *fqdn, struct sockaddr_in *addr)
     struct addrinfo hints;
     struct addrinfo *result;
     memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;
+    hints.ai_family = AF_INET; 
     hints.ai_socktype = SOCK_RAW;
-    if (getaddrinfo(fqdn, NULL, &hints, &result) != 0)
+    int error = getaddrinfo(fqdn, NULL, &hints, &result);
+    if (error != 0)
     {
-       perror("getaddrinfo failed");
-       exit(EXIT_FAILURE);
+        fprintf(stderr, "getaddrinfo failed: %s", gai_strerror(error));
+        exit(EXIT_FAILURE);
     }
     memcpy(addr, result->ai_addr, sizeof(struct sockaddr_in));
     freeaddrinfo(result);
