@@ -52,3 +52,4 @@ multiple of two octets.
 * Make sure all structure are set to zero before sending new infos
 * Add id verification to avoid multiple instances of the program
 * Add correct timeout for appropriate packet -> smarter based on start and current time
+* only reset part of iphdr instead of the whole structure
