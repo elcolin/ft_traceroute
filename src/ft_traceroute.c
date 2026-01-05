@@ -13,7 +13,7 @@ inline void printIPHeader(struct iphdr *reply)
     addr.s_addr = saddr;
 
     char *ip_str = inet_ntoa(addr);
-    printf("%s  ", ip_str);
+    printf("(%s)  ", ip_str);
 }
 
 void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct timeval requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES])
