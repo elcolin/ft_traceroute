@@ -53,3 +53,4 @@ multiple of two octets.
 * Add id verification to avoid multiple instances of the program
 * Add correct timeout for appropriate packet -> smarter based on start and current time
 * only reset part of iphdr instead of the whole structure
+* make display incremental
