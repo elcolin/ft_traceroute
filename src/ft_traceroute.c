@@ -112,7 +112,7 @@ void printResponses(struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES],
             {
                 if(ipsAreEqual(&replyPackets[PACKET_NUMBER(hops) + i].saddr, &replyPackets[PACKET_NUMBER(hops) + j].saddr) == FALSE)
                     continue;
-                if (!memcmp(&addrs[DESTINATION].sin_addr, &replyPackets[PACKET_NUMBER(hops) + j].saddr, sizeof(u_int32_t)))
+                if (ipsAreEqual((uint32_t *) &addrs[DESTINATION].sin_addr, &replyPackets[PACKET_NUMBER(hops) + j].saddr) == TRUE)
                     isDestination++;
                 rtt_microseconds = get_elapsed_microseconds(requestTimestamp[PACKET_NUMBER(hops) + j], replyTimestamp[PACKET_NUMBER(hops) + j]);
                 printf("%.3f ms  ", rtt_microseconds / 1000.0);
