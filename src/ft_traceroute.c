@@ -83,15 +83,20 @@ void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * NUMB
     }
 }
 
-void printResponses(struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], struct timeval requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES], struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES])
+void printResponses(struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], 
+                    struct timeval requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES], 
+                    struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES], 
+                    struct sockaddr_in addrs[2])
 {
     size_t  hops = 0;
     struct  iphdr tst = {};
     long    rtt_microseconds = 0;
     bool    hopHasBeenPrinted[NUMBER_OF_PROBES] = {0};
+    size_t  isDestination = 0;
 
     while (hops < MAX_HOPS)
     {
+        isDestination = 0;
         printf("%ld ", hops + 1);
         for (int i = 0; i < NUMBER_OF_PROBES; i++)
         {
@@ -107,6 +112,8 @@ void printResponses(struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], stru
             {
                 if (memcmp(&replyPackets[PACKET_NUMBER(hops) + i].saddr, &replyPackets[PACKET_NUMBER(hops) + j].saddr, sizeof(uint32_t)))
                     continue;
+                if (!memcmp(&addrs[DESTINATION].sin_addr, &replyPackets[PACKET_NUMBER(hops) + j].saddr, sizeof(u_int32_t)))
+                    isDestination++;
                 rtt_microseconds = get_elapsed_microseconds(requestTimestamp[PACKET_NUMBER(hops) + j], replyTimestamp[PACKET_NUMBER(hops) + j]);
                 printf("%.3f ms  ", rtt_microseconds / 1000.0);
                 hopHasBeenPrinted[j] = TRUE;
@@ -115,5 +122,7 @@ void printResponses(struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], stru
         memset(&hopHasBeenPrinted, FALSE, NUMBER_OF_PROBES * sizeof(bool));
         printf("\n");
         hops ++;
+        if (isDestination == NUMBER_OF_PROBES)
+            return;        
     }
 }

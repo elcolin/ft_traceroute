@@ -32,6 +32,6 @@ static inline void triggerErrorIf(int condition, char *msg, int sockfd)
 void printIPHeader(struct iphdr *reply);
 void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct timeval requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES]);
 void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES]);
-void printResponses(struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], struct timeval requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES], struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES]);
+void printResponses(struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], struct timeval requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES], struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES], struct sockaddr_in addrs[2]);
 
 #endif

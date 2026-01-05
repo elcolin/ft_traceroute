@@ -19,5 +19,5 @@ int main(int argc, char *argv[])
     sendProbesToDestination(sockfd, addrs, requestTimestamp);
     receiveProbesFeedback(sockfd, replyPackets, replyTimestamp);
     close(sockfd);
-    printResponses(replyPackets, requestTimestamp, replyTimestamp);
+    printResponses(replyPackets, requestTimestamp, replyTimestamp, addrs);
 }
