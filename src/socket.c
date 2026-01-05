@@ -14,7 +14,7 @@ int initSocketFd()
         perror("socket");
         exit(EXIT_FAILURE);
     }
-    int opt = 1;
+    const int opt = 1;
     if (setsockopt(sockfd, IPPROTO_IP, IP_HDRINCL, &opt, sizeof(opt)) < 0) {
         perror("setsockopt(IP_HDRINCL)");
         close(sockfd);
