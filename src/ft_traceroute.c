@@ -110,7 +110,7 @@ void printResponses(struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES],
             printIPHeader(&replyPackets[PACKET_NUMBER(hops) + i]);
             for (int j = i; j < NUMBER_OF_PROBES; j++)
             {
-                if (memcmp(&replyPackets[PACKET_NUMBER(hops) + i].saddr, &replyPackets[PACKET_NUMBER(hops) + j].saddr, sizeof(uint32_t)))
+                if(ipsAreEqual(&replyPackets[PACKET_NUMBER(hops) + i].saddr, &replyPackets[PACKET_NUMBER(hops) + j].saddr) == FALSE)
                     continue;
                 if (!memcmp(&addrs[DESTINATION].sin_addr, &replyPackets[PACKET_NUMBER(hops) + j].saddr, sizeof(u_int32_t)))
                     isDestination++;
