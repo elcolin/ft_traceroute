@@ -53,11 +53,11 @@ void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct tim
 void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES])
 {
     size_t              hops = 0;
-    struct timeval      timeout = {};
     u_int8_t            replyBuffer[BUFFER_SIZE] = {};
     int                 bytesReceived = 0;
     fd_set              readfds;
     t_icmp_packet       replyPacket;
+    struct timeval      timeout = {};
     struct udphdr      *errorPacketPtr = NULL;
 
     FD_ZERO(&readfds);
@@ -89,10 +89,10 @@ void printResponses(struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES],
                     struct sockaddr_in addrs[2])
 {
     size_t  hops = 0;
-    struct  iphdr tst = {};
+    size_t  isDestination = 0;
+    const   struct  iphdr tst = {};
     long    rtt_microseconds = 0;
     bool    hopHasBeenPrinted[NUMBER_OF_PROBES] = {0};
-    size_t  isDestination = 0;
 
     while (hops < MAX_HOPS)
     {
@@ -108,9 +108,9 @@ void printResponses(struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES],
             if (hopHasBeenPrinted[i] == TRUE)
                 continue;
             printIPHeader(&replyPackets[PACKET_NUMBER(hops) + i]);
-            for (int j = i; j < NUMBER_OF_PROBES; j++)
+            for (int j = i; j < NUMBER_OF_PROBES; j++) // Print all the probes tied to the IP address of the packet
             {
-                if(ipsAreEqual(&replyPackets[PACKET_NUMBER(hops) + i].saddr, &replyPackets[PACKET_NUMBER(hops) + j].saddr) == FALSE)
+                if(i != j && ipsAreEqual(&replyPackets[PACKET_NUMBER(hops) + i].saddr, &replyPackets[PACKET_NUMBER(hops) + j].saddr) == FALSE)
                     continue;
                 if (ipsAreEqual((uint32_t *) &addrs[DESTINATION].sin_addr, &replyPackets[PACKET_NUMBER(hops) + j].saddr) == TRUE)
                     isDestination++;
