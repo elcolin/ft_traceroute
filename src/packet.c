@@ -25,15 +25,16 @@ inline uint16_t computeChecksum(uint8_t *addr, int count)
 }
 
 void defineRequestIPHeader(struct iphdr *ipHeader,
-                           uint32_t src_ip,
-                           uint32_t dst_ip,
-                           uint8_t ttl,
-                           uint16_t id)
+                        const uint32_t src_ip,
+                        const uint32_t dst_ip,
+                        const uint8_t ttl,
+                        const uint16_t id,
+                        const uint16_t packetLen)
 {
     ipHeader->ihl = 5;                 // 5 * 4 = 20 bytes (no options)
     ipHeader->version = 4;
     ipHeader->tos = 0;
-    ipHeader->tot_len = htons(sizeof(struct iphdr) + sizeof(struct udphdr));
+    ipHeader->tot_len = htons(packetLen);
     ipHeader->id = htons(id);
     ipHeader->frag_off = 0;
     ipHeader->ttl = ttl;

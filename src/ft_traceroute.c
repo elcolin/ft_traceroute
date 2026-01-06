@@ -1,6 +1,6 @@
 #include "ft_traceroute.h"
 
-void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct timeval requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES])
+void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct timeval requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES], const u_int16_t packetLen)
 {
     uint8_t             requestBuffer[BUFFER_SIZE] = {};
     t_udp_packet        requestPacket = {};
@@ -22,7 +22,8 @@ void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct tim
                 addrs[SOURCE].sin_addr.s_addr,
                 addrs[DESTINATION].sin_addr.s_addr,
                 hops + 1,
-                (getpid() + (PACKET_NUMBER(hops)) + i) & 0xFFFF);
+                (getpid() + (PACKET_NUMBER(hops)) + i) & 0xFFFF,
+                packetLen);
             defineRequestUDPHeader(requestPacket.ip_hdr, requestPacket.udp_hdr);
             while (socketIsReadyToWrite(sockfd, &writefds, &timeout) == FAILURE)
                 continue;

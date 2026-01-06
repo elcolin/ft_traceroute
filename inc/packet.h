@@ -52,10 +52,11 @@ typedef struct s_icmp_packet {
 void        initPacket(void *buffer, t_udp_packet *packet);
 uint16_t    computeChecksum(uint8_t *addr, int count);
 void defineRequestIPHeader(struct iphdr *ipHeader,
-                           uint32_t src_ip,
-                           uint32_t dst_ip,
-                           uint8_t ttl,
-                           uint16_t id);
+                            const uint32_t src_ip,
+                            const uint32_t dst_ip,
+                            const uint8_t ttl,
+                            const uint16_t id,
+                            const uint16_t packetLen);
 void defineRequestUDPHeader(struct iphdr *ipHeader, struct udphdr *udpHeader);
 status parsePacket(void *buffer, struct iphdr **ip_header, struct icmphdr **icmp_header);
 

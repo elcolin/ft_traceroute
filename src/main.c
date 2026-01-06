@@ -36,6 +36,7 @@ int main(int argc, char *argv[])
     struct timeval      replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES] = {};
     int packetLen = 0;
 
+    const int minPacketLen = (int) (sizeof(struct iphdr) + sizeof(struct udphdr));
     srand(time(NULL));
     if (argc > 3)
         fprintf(stderr, "Extra arg `%s' (position 3, argc 3)", argv[3]);
@@ -54,14 +55,14 @@ int main(int argc, char *argv[])
             errorArgumentHandler(2, argv[2]);
         break;
         default:
-            packetLen = (packetLen >= (int) (sizeof(struct iphdr) + sizeof(struct udphdr)) ? packetLen : (int) (sizeof(struct iphdr) + sizeof(struct udphdr)));
+            packetLen = packetLen > minPacketLen ? packetLen : minPacketLen;
         break;
     }
     setSourceAddress(&addrs[SOURCE], addrs[DESTINATION].sin_family);
     printf("traceroute to %s (%s), %d hops max, %d byte packets\n", argv[1], inet_ntoa(addrs[DESTINATION].sin_addr), MAX_HOPS, packetLen);
 
     sockfd = initSocketFd();
-    sendProbesToDestination(sockfd, addrs, requestTimestamp);
+    sendProbesToDestination(sockfd, addrs, requestTimestamp, (uint16_t) packetLen);
     receiveProbesFeedback(sockfd, replyPackets, replyTimestamp);
     close(sockfd);
     printResponses(replyPackets, requestTimestamp, replyTimestamp, addrs);
