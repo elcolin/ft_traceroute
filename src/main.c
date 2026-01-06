@@ -13,7 +13,7 @@ typedef enum {
     WRONGARG = -3
 } packetLenError;
 
-int setPacketLen(char *arg)
+int getPacketLenNumberFromStr(char *arg)
 {
     int res = 0;
     for (size_t i = 0; i < strlen(arg); i++)
@@ -27,6 +27,37 @@ int setPacketLen(char *arg)
     return res;
 }
 
+uint16_t setPacketLen(char *arg)
+{
+    int packetLen = getPacketLenNumberFromStr(arg);
+    switch (packetLen) {
+        case TOOBIG:
+            fprintf(stderr, "too big packetlen %s specified\n", arg);
+            exit(EXIT_FAILURE);
+        break;
+        case WRONGARG:
+            errorArgumentHandler(2, arg);
+        break;
+    }
+    return (uint16_t) packetLen;
+}
+
+void printHelpAndExit()
+{
+    printf("Usage: \ntraceroute host [ packetlen ]\n");
+    exit(EXIT_SUCCESS);
+}
+
+void findHelpArgument(char **argv, int argc)
+{
+    for (int i = 1; i < argc; i++)
+    {
+        if(!strcmp(argv[i], "--help"))
+            printHelpAndExit();
+    }
+}
+
+
 int main(int argc, char *argv[])
 {
     int                 sockfd;
@@ -35,29 +66,22 @@ int main(int argc, char *argv[])
     struct timeval      requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES] = {};
     struct timeval      replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES] = {};
     int packetLen = 0;
-
     const int minPacketLen = (int) (sizeof(struct iphdr) + sizeof(struct udphdr));
+
     srand(time(NULL));
+    if (argc < 2)
+        printHelpAndExit();
+    findHelpArgument(argv, argc);
+
     if (argc > 3)
         fprintf(stderr, "Extra arg `%s' (position 3, argc 3)", argv[3]);
-    if (argc < 2 || argc > 3)
-        return 1;//TO DO add more detailed error
+
     if(setDestinationAddress(&addrs[DESTINATION], argv[1]) == FAILURE)
         errorArgumentHandler(1, argv[1]);
-    if (argc == 3)
+    if (argc >= 3)
         packetLen = setPacketLen(argv[2]);
-    switch (packetLen) {
-        case TOOBIG:
-            fprintf(stderr, "too big packetlen %s specified\n", argv[2]);
-            exit(EXIT_FAILURE);
-        break;
-        case WRONGARG:
-            errorArgumentHandler(2, argv[2]);
-        break;
-        default:
-            packetLen = packetLen > minPacketLen ? packetLen : minPacketLen;
-        break;
-    }
+    packetLen = packetLen > minPacketLen ? packetLen : minPacketLen;
+
     setSourceAddress(&addrs[SOURCE], addrs[DESTINATION].sin_family);
     printf("traceroute to %s (%s), %d hops max, %d byte packets\n", argv[1], inet_ntoa(addrs[DESTINATION].sin_addr), MAX_HOPS, packetLen);
 
