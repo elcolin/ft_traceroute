@@ -24,7 +24,7 @@
 
 
 status resolveFQDN(char *fqdn, struct sockaddr_in *addr);
-void setDestinationAddress(struct sockaddr_in *destAddress, char *ip_address);
+status setDestinationAddress(struct sockaddr_in *destAddress, char *ip_address);
 void setSourceAddress(struct sockaddr_in *srcAddress, u_int16_t familyType);
 
 #endif

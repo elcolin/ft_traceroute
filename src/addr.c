@@ -10,23 +10,21 @@ status resolveFQDN(char *fqdn, struct sockaddr_in *addr)
     int error = getaddrinfo(fqdn, NULL, &hints, &result);
     if (error != 0)
     {
-        fprintf(stderr, "getaddrinfo failed: %s", gai_strerror(error));
-        exit(EXIT_FAILURE);
+        fprintf(stderr, "%s failed: %s\n", fqdn, gai_strerror(error));
+        return FAILURE;
     }
     memcpy(addr, result->ai_addr, sizeof(struct sockaddr_in));
     freeaddrinfo(result);
     return SUCCESS;
 }
 
-void setDestinationAddress(struct sockaddr_in *destAddress, char *ip_address)
+status setDestinationAddress(struct sockaddr_in *destAddress, char *ip_address)
 {
     memset(destAddress, 0, sizeof(*destAddress));
     destAddress->sin_family = AF_INET;
     if(inet_pton(PF_INET, ip_address, &destAddress->sin_addr) != 1 && resolveFQDN(ip_address, destAddress) == FAILURE)
-    {
-        fprintf(stderr, "Invalid address: %s\n", ip_address);
-        exit(EXIT_FAILURE);
-    }
+        return FAILURE;
+    return SUCCESS;
 }
 
 void setSourceAddress(struct sockaddr_in *srcAddress, u_int16_t familyType)
