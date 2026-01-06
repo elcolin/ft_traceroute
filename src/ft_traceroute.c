@@ -22,7 +22,7 @@ void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct tim
                 addrs[SOURCE].sin_addr.s_addr,
                 addrs[DESTINATION].sin_addr.s_addr,
                 hops + 1,
-                (getpid() + (PACKET_NUMBER(hops)) + i) & 0xFFFF,
+                getpid() & 0xFFFF,
                 packetLen);
             defineRequestUDPHeader(requestPacket.ip_hdr, requestPacket.udp_hdr);
             while (socketIsReadyToWrite(sockfd, &writefds, &timeout) == FAILURE)
@@ -43,7 +43,8 @@ void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * NUMB
     fd_set              readfds;
     t_icmp_packet       replyPacket;
     struct timeval      timeout = {};
-    struct udphdr      *errorPacketPtr = NULL;
+    struct udphdr       *feedbackUdpPtr = NULL;
+    struct iphdr        *feedbackIpPtr = NULL;
 
     FD_ZERO(&readfds);
     while (hops < MAX_HOPS)
@@ -59,8 +60,11 @@ void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * NUMB
             triggerErrorIf(bytesReceived < 0, "recvfrom failed", sockfd);
             if (parsePacket(replyBuffer, &replyPacket.ip_hdr, &replyPacket.icmp_hdr) == FAILURE) // If no valid packet
                 continue;
-            errorPacketPtr = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT((replyPacket.icmp_hdr)));
-            u_int16_t seq = ntohs(errorPacketPtr->uh_dport) - DEFAULT_DEST_PORT; //
+            feedbackIpPtr = (void *)ICMPHDR_SHIFT(replyPacket.icmp_hdr);
+            if (ntohs(feedbackIpPtr->id) != (getpid() & 0xFFFF))
+                continue;
+            feedbackUdpPtr = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT((replyPacket.icmp_hdr)));
+            u_int16_t seq = ntohs(feedbackUdpPtr->uh_dport) - DEFAULT_DEST_PORT; //
             gettimeofday(&replyTimestamp[seq], NULL);
             memcpy(&replyPackets[seq], &(*replyPacket.ip_hdr), sizeof(struct iphdr));
         }
