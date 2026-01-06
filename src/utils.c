@@ -3,10 +3,7 @@
 inline void printIPHeader(struct iphdr *reply)
 {
     if (reply == NULL)
-    {
-        printf("* ");
         return;
-    }
 
     uint32_t saddr = reply->saddr; // in network byte order
     struct in_addr addr;
