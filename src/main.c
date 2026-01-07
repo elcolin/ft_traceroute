@@ -22,7 +22,7 @@ int getPacketLenNumberFromStr(char *arg)
             return WRONGARG;
     }
     res = atoi(arg);
-    if (res >= BUFFER_SIZE)
+    if (res > BUFFER_SIZE)
         return TOOBIG;
     return res;
 }

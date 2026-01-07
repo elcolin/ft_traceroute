@@ -35,7 +35,9 @@ void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct tim
     }
 }
 
-void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES])
+void receiveProbesFeedback(int sockfd, 
+                        struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES],
+                        struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES])
 {
     size_t              hops = 0;
     u_int8_t            replyBuffer[BUFFER_SIZE] = {};
