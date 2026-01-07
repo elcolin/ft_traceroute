@@ -5,7 +5,7 @@ EXEC    = ft_traceroute
 SRCDIR  = src
 OBJDIR  = obj
 
-SRCS    = $(addprefix $(SRCDIR)/, main.c ft_traceroute.c socket.c addr.c packet.c utils.c)
+SRCS    = $(addprefix $(SRCDIR)/, main.c ft_traceroute.c socket.c addr.c packet.c utils.c arg.c)
 OBJS    = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRCS))
 
 all: $(EXEC)
