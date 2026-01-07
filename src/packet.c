@@ -71,7 +71,7 @@ inline status findValidPacket(uint8_t *buffer, struct iphdr **ip_header, struct 
     {
         *ip_header = (struct iphdr *)&buffer[i];   
         *icmp_header = (struct icmphdr *)(&buffer[i] + ((*ip_header)->ihl * 4));
-        if (ntohs((*ip_header)->tot_len) < sizeof(struct iphdr))
+        if (ntohs((*ip_header)->tot_len) < sizeof(struct iphdr) || (*ip_header)->protocol != IPPROTO_ICMP)
             return FAILURE;
         feedbackIpPtr = (void *)ICMPHDR_SHIFT(*icmp_header);
         if (ntohs(feedbackIpPtr->id) == (getpid() & 0xFFFF))

@@ -86,7 +86,13 @@ int main(int argc, char *argv[])
 
     sockfd = initSocketFd();
     sendProbesToDestination(sockfd, addrs, requestTimestamp, (uint16_t) packetLen);
-    receiveProbesFeedback(sockfd, replyPackets, replyTimestamp);
+    size_t currentPacket = 0;
+    size_t latestPacket = 0;
+    while (currentPacket < MAX_HOPS * NUMBER_OF_PROBES)
+    {
+        latestPacket = receiveProbesFeedback(sockfd, replyPackets, replyTimestamp);
+        printResponses(replyPackets, requestTimestamp, replyTimestamp, addrs, latestPacket);
+        currentPacket = latestPacket;
+    }
     close(sockfd);
-    printResponses(replyPackets, requestTimestamp, replyTimestamp, addrs);
 }

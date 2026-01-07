@@ -33,12 +33,13 @@ void sendProbesToDestination(int sockfd,
                             struct sockaddr_in addrs[2], 
                             struct timeval requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES], 
                             const u_int16_t packetLen);
-void receiveProbesFeedback(int sockfd, 
+size_t receiveProbesFeedback(int sockfd, 
                             struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], 
                             struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES]);
 void printResponses(const struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], 
                     const struct timeval requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES], 
                     const struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES], 
-                    const struct sockaddr_in addrs[2]);
+                    const struct sockaddr_in addrs[2],
+                    const size_t latestPacket);
 
 #endif

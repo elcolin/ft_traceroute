@@ -35,53 +35,64 @@ void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct tim
     }
 }
 
-void receiveProbesFeedback(int sockfd, 
+size_t receiveProbesFeedback(int sockfd, 
                         struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES],
                         struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES])
 {
-    size_t              hops = 0;
-    u_int8_t            replyBuffer[BUFFER_SIZE] = {};
+    static size_t              hops = 0;
+    static u_int8_t            replyBuffer[BUFFER_SIZE] = {};
     int                 bytesReceived = 0;
-    fd_set              readfds;
+    static fd_set              readfds;
     t_icmp_packet       replyPacket;
-    struct timeval      timeout = {};
-    struct udphdr       *feedbackUdpPtr = NULL;
+    static struct timeval      timeout = {};
+    static struct timeval      startTime = {};
+    static struct timeval      currentTime = {};
+    static struct udphdr       *feedbackUdpPtr = NULL;
 
     FD_ZERO(&readfds);
+    gettimeofday(&startTime, NULL);
     while (hops < MAX_HOPS)
     {
         for (int i = 0; i < NUMBER_OF_PROBES; i++)
         {
-            timeout.tv_usec = JITTER;
+            timeout.tv_usec = 330000;
             timeout.tv_sec = 0;
-            memset(replyBuffer, 0, bytesReceived);
             if (socketIsReadyToRead(sockfd, &readfds, &timeout) == FAILURE) // If Timeout
-                continue;
+            continue;
             bytesReceived = receiveResponse((void *)replyBuffer, sockfd, sizeof(replyBuffer));
             triggerErrorIf(bytesReceived < 0, "recvfrom failed", sockfd);
-            if (findValidPacket(replyBuffer, &replyPacket.ip_hdr, &replyPacket.icmp_hdr, bytesReceived) == FAILURE) // If no valid packet
-                continue;
-            feedbackUdpPtr = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT((replyPacket.icmp_hdr)));
-            u_int16_t seq = ntohs(feedbackUdpPtr->uh_dport) - DEFAULT_DEST_PORT;
-            gettimeofday(&replyTimestamp[seq], NULL);
-            memcpy(&replyPackets[seq], &(*replyPacket.ip_hdr), sizeof(struct iphdr));
+            size_t packetIdx = 0;
+            while (findValidPacket(&replyBuffer[packetIdx], &replyPacket.ip_hdr, &replyPacket.icmp_hdr, bytesReceived) == SUCCESS)
+            {
+                feedbackUdpPtr = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT((replyPacket.icmp_hdr)));
+                u_int16_t seq = ntohs(feedbackUdpPtr->uh_dport) - DEFAULT_DEST_PORT;
+                gettimeofday(&replyTimestamp[seq], NULL);
+                memcpy(&replyPackets[seq], &(*replyPacket.ip_hdr), sizeof(struct iphdr));
+                memset(replyBuffer, 0, bytesReceived);
+                packetIdx += replyPacket.ip_hdr->tot_len;
+            }
         }
+        gettimeofday(&currentTime, NULL);
         hops ++;
+        if (get_elapsed_microseconds(startTime, currentTime) > 5000000)
+        break;
     }
+    return PACKET_NUMBER(hops);
 }
 
 void printResponses(const struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], 
                     const struct timeval requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES], 
                     const struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES], 
-                    const struct sockaddr_in addrs[2])
+                    const struct sockaddr_in addrs[2],
+                    const size_t latestPacket)
 {
-    size_t  hops = 0;
+    static size_t  hops = 0;
     size_t  isDestination = 0;
     const   struct  iphdr tst = {};
     long    rtt_microseconds = 0;
     bool    hopHasBeenPrinted[NUMBER_OF_PROBES] = {0};
 
-    while (hops < MAX_HOPS)
+    while (PACKET_NUMBER(hops) < latestPacket)
     {
         isDestination = 0;
         printf("%ld ", hops + 1);
