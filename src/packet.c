@@ -63,12 +63,20 @@ void defineRequestUDPHeader(struct iphdr *ipHeader, struct udphdr *udpHeader)
     udpHeader->uh_sum = computeChecksum(tampon, sizeof(*psdudp) + sizeof(*udpHeader));// udp checksum
 }
 
-inline status parsePacket(void *buffer, struct iphdr **ip_header, struct icmphdr **icmp_header)
+inline status findValidPacket(uint8_t *buffer, struct iphdr **ip_header, struct icmphdr **icmp_header, size_t bufferSize)
 {
-    *ip_header = (struct iphdr *)buffer;   
-    *icmp_header = (struct icmphdr *)(buffer + ((*ip_header)->ihl * 4));
-
-    if (ntohs((*ip_header)->tot_len) < sizeof(struct iphdr))
-        return FAILURE;
-    return SUCCESS;
+    struct iphdr        *feedbackIpPtr = NULL;
+    size_t i = 0;
+    while (i < bufferSize)
+    {
+        *ip_header = (struct iphdr *)&buffer[i];   
+        *icmp_header = (struct icmphdr *)(&buffer[i] + ((*ip_header)->ihl * 4));
+        if (ntohs((*ip_header)->tot_len) < sizeof(struct iphdr))
+            return FAILURE;
+        feedbackIpPtr = (void *)ICMPHDR_SHIFT(*icmp_header);
+        if (ntohs(feedbackIpPtr->id) == (getpid() & 0xFFFF))
+            return SUCCESS;
+        i += ntohs((*ip_header)->tot_len);
+    }
+    return FAILURE;
 }

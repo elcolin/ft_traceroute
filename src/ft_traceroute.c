@@ -44,7 +44,6 @@ void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * NUMB
     t_icmp_packet       replyPacket;
     struct timeval      timeout = {};
     struct udphdr       *feedbackUdpPtr = NULL;
-    struct iphdr        *feedbackIpPtr = NULL;
 
     FD_ZERO(&readfds);
     while (hops < MAX_HOPS)
@@ -52,19 +51,16 @@ void receiveProbesFeedback(int sockfd, struct iphdr replyPackets[MAX_HOPS * NUMB
         for (int i = 0; i < NUMBER_OF_PROBES; i++)
         {
             timeout.tv_usec = JITTER;
-            timeout.tv_sec = 0;// TO DO change
+            timeout.tv_sec = 0;
             memset(replyBuffer, 0, bytesReceived);
             if (socketIsReadyToRead(sockfd, &readfds, &timeout) == FAILURE) // If Timeout
                 continue;
             bytesReceived = receiveResponse((void *)replyBuffer, sockfd, sizeof(replyBuffer));
             triggerErrorIf(bytesReceived < 0, "recvfrom failed", sockfd);
-            if (parsePacket(replyBuffer, &replyPacket.ip_hdr, &replyPacket.icmp_hdr) == FAILURE) // If no valid packet
-                continue;
-            feedbackIpPtr = (void *)ICMPHDR_SHIFT(replyPacket.icmp_hdr);
-            if (ntohs(feedbackIpPtr->id) != (getpid() & 0xFFFF))
+            if (findValidPacket(replyBuffer, &replyPacket.ip_hdr, &replyPacket.icmp_hdr, bytesReceived) == FAILURE) // If no valid packet
                 continue;
             feedbackUdpPtr = (void *)IPHDR_SHIFT(ICMPHDR_SHIFT((replyPacket.icmp_hdr)));
-            u_int16_t seq = ntohs(feedbackUdpPtr->uh_dport) - DEFAULT_DEST_PORT; //
+            u_int16_t seq = ntohs(feedbackUdpPtr->uh_dport) - DEFAULT_DEST_PORT;
             gettimeofday(&replyTimestamp[seq], NULL);
             memcpy(&replyPackets[seq], &(*replyPacket.ip_hdr), sizeof(struct iphdr));
         }

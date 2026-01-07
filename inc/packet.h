@@ -58,6 +58,6 @@ void defineRequestIPHeader(struct iphdr *ipHeader,
                             const uint16_t id,
                             const uint16_t packetLen);
 void defineRequestUDPHeader(struct iphdr *ipHeader, struct udphdr *udpHeader);
-status parsePacket(void *buffer, struct iphdr **ip_header, struct icmphdr **icmp_header);
+status findValidPacket(uint8_t *buffer, struct iphdr **ip_header, struct icmphdr **icmp_header, size_t bufferSize);
 
 #endif
