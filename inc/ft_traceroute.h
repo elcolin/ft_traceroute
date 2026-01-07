@@ -36,8 +36,9 @@ void sendProbesToDestination(int sockfd,
 void receiveProbesFeedback(int sockfd, 
                             struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], 
                             struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES]);
-void printResponses(struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], 
-                    struct timeval requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES], struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES], 
-                    struct sockaddr_in addrs[2]);
+void printResponses(const struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], 
+                    const struct timeval requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES], 
+                    const struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES], 
+                    const struct sockaddr_in addrs[2]);
 
 #endif

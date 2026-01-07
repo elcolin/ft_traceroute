@@ -1,6 +1,6 @@
 #include "utils.h"
 
-inline void printIPHeader(struct iphdr *reply)
+inline void printIPHeader(const struct iphdr *reply)
 {
     if (reply == NULL)
         return;
@@ -13,12 +13,12 @@ inline void printIPHeader(struct iphdr *reply)
     printf("(%s)  ", ip_str);
 }
 
-inline long get_elapsed_microseconds(struct timeval start, struct timeval end)
+inline long get_elapsed_microseconds(const struct timeval start, const struct timeval end)
 {
     return (end.tv_sec - start.tv_sec) * 1000000 + (end.tv_usec - start.tv_usec);
 }
 
-inline bool ipsAreEqual(u_int32_t *ip1, u_int32_t *ip2)
+inline bool ipsAreEqual(const u_int32_t *ip1, const u_int32_t *ip2)
 {
     if (memcmp(ip1, ip2, sizeof(uint32_t)))
         return FALSE;
@@ -26,7 +26,7 @@ inline bool ipsAreEqual(u_int32_t *ip1, u_int32_t *ip2)
 }
 
 
-void triggerErrorNoFreeingIf(bool condition, char *msg, char *reason)
+void triggerErrorNoFreeingIf(const bool condition, const char *msg, const char *reason)
 {
     if (condition)
     {

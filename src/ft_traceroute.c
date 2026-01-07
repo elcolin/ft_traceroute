@@ -70,10 +70,10 @@ void receiveProbesFeedback(int sockfd,
     }
 }
 
-void printResponses(struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], 
-                    struct timeval requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES], 
-                    struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES], 
-                    struct sockaddr_in addrs[2])
+void printResponses(const struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], 
+                    const struct timeval requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES], 
+                    const struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES], 
+                    const struct sockaddr_in addrs[2])
 {
     size_t  hops = 0;
     size_t  isDestination = 0;

@@ -29,10 +29,10 @@ typedef enum
    FAILURE
 }  status;
 
-void printIPHeader(struct iphdr *reply);
-void triggerErrorNoFreeingIf(bool condition, char *msg, char *reason);
-long get_elapsed_microseconds(struct timeval start, struct timeval end);
-bool ipsAreEqual(u_int32_t *ip1, u_int32_t *ip2);
+void printIPHeader(const struct iphdr *reply);
+void triggerErrorNoFreeingIf(const bool condition, const char *msg, const char *reason);
+long get_elapsed_microseconds(const struct timeval start, const struct timeval end);
+bool ipsAreEqual(const u_int32_t *ip1, const u_int32_t *ip2);
 
 
 
