@@ -14,7 +14,7 @@ void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct tim
     {
         for (int i = 0; i < NUMBER_OF_PROBES; i++)
         {
-            timeout.tv_usec = JITTER;
+            timeout.tv_usec = SENDING_TIMEOUT;
             timeout.tv_sec = 0;
             memset(&requestBuffer, 0, bytesSent);
             initPacket((requestBuffer), &requestPacket);
@@ -55,7 +55,7 @@ inline size_t receiveProbesFeedback(int sockfd,
     {
         for (int i = 0; i < NUMBER_OF_PROBES; i++)
         {
-            timeout.tv_usec = 330000;
+            timeout.tv_usec = RECEPTION_TIMEOUT;
             timeout.tv_sec = 0;
             if (socketIsReadyToRead(sockfd, &readfds, &timeout) == FAILURE) // If Timeout
             continue;
@@ -74,7 +74,7 @@ inline size_t receiveProbesFeedback(int sockfd,
         }
         gettimeofday(&currentTime, NULL);
         hops ++;
-        if (get_elapsed_microseconds(startTime, currentTime) > 5000000)
+        if (get_elapsed_microseconds(startTime, currentTime) > PRINT_TIMEOUT)
         break;
     }
     return PACKET_NUMBER(hops);
