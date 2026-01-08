@@ -35,7 +35,7 @@ void sendProbesToDestination(int sockfd, struct sockaddr_in addrs[2], struct tim
     }
 }
 
-size_t receiveProbesFeedback(int sockfd, 
+inline size_t receiveProbesFeedback(int sockfd, 
                         struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES],
                         struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES])
 {
@@ -80,7 +80,7 @@ size_t receiveProbesFeedback(int sockfd,
     return PACKET_NUMBER(hops);
 }
 
-void printResponses(const struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], 
+inline void printResponses(const struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES], 
                     const struct timeval requestTimestamp[MAX_HOPS * NUMBER_OF_PROBES], 
                     const struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES], 
                     const struct sockaddr_in addrs[2],
