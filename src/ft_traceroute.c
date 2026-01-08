@@ -39,15 +39,15 @@ inline size_t receiveProbesFeedback(int sockfd,
                         struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_PROBES],
                         struct timeval replyTimestamp[MAX_HOPS * NUMBER_OF_PROBES])
 {
-    static size_t              hops = 0;
-    static u_int8_t            replyBuffer[BUFFER_SIZE] = {};
-    int                 bytesReceived = 0;
-    static fd_set              readfds;
-    t_icmp_packet       replyPacket;
-    static struct timeval      timeout = {};
-    static struct timeval      startTime = {};
-    static struct timeval      currentTime = {};
-    static struct udphdr       *feedbackUdpPtr = NULL;
+    static size_t           hops = 0;
+    static u_int8_t         replyBuffer[BUFFER_SIZE] = {};
+    int                     bytesReceived = 0;
+    static fd_set           readfds;
+    t_icmp_packet           replyPacket = {};
+    static struct timeval    timeout = {};
+    static struct timeval    startTime = {};
+    static struct timeval    currentTime = {};
+    static struct udphdr    *feedbackUdpPtr = NULL;
 
     FD_ZERO(&readfds);
     gettimeofday(&startTime, NULL);
@@ -87,15 +87,16 @@ inline void printResponses(const struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_
                     const size_t latestPacket)
 {
     static size_t  hops = 0;
-    size_t  isDestination = 0;
-    const   struct  iphdr tst = {};
-    long    rtt_microseconds = 0;
-    bool    hopHasBeenPrinted[NUMBER_OF_PROBES] = {0};
+    static size_t  isDestination = 0;
+    static const struct  iphdr tst = {};
+    static long    rtt_microseconds = 0;
+    static bool    hopHasBeenPrinted[NUMBER_OF_PROBES] = {FALSE};
 
     while (PACKET_NUMBER(hops) < latestPacket)
     {
         isDestination = 0;
-        printf("%ld ", hops + 1);
+        printf("%ld  ", hops + 1);
+        memset(&hopHasBeenPrinted, FALSE, NUMBER_OF_PROBES * sizeof(bool));
         for (int i = 0; i < NUMBER_OF_PROBES; i++)
         {
             if (!memcmp(&replyPackets[PACKET_NUMBER(hops) + i], &tst, sizeof(struct iphdr)))
@@ -117,7 +118,6 @@ inline void printResponses(const struct iphdr replyPackets[MAX_HOPS * NUMBER_OF_
                 hopHasBeenPrinted[j] = TRUE;
             }
         }
-        memset(&hopHasBeenPrinted, FALSE, NUMBER_OF_PROBES * sizeof(bool));
         printf("\n");
         hops ++;
         if (isDestination == NUMBER_OF_PROBES)
